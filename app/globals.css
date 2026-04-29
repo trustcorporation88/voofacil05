@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos personalizados */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --primary: 217 91% 34%;
+  --primary-foreground: 0 0% 100%;
+}
+
+body {
+  font-family: var(--font-inter);
+}
+
+/* Melhorias visuais */
+.card {
+  transition: all 0.2s ease;
+}
+
+/* FORÇAR DROPDOWN AZUL - MÁXIMA PRIORIDADE */
+.airport-dropdown-blue {
+  background-color: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.airport-dropdown-blue button {
+  background-color: #eff6ff !important;
+}
+
+.airport-dropdown-blue button:hover {
+  background-color: #dbeafe !important;
+}
+
+.airport-dropdown-blue .iata-code {
+  color: #1d4ed8 !important;
+  font-weight: 700 !important;
+}
