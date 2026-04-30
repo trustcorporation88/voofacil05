@@ -102,12 +102,15 @@ export async function searchWithSerpAPI(
         const price = flight.price || 0;
         const firstSegment = flight.flights?.[0] || {};
 
+        // Preço pode estar em diferentes formatos
+        const priceValue = price || flight.total_price || flight.fare?.total || 0;
+
         return {
-          id: `serp-${idx}-${price}`,
+          id: `serp-${idx}-${priceValue}`,
           price: {
-            total: price.toString(),
+            total: priceValue > 0 ? priceValue.toString() : "Consultar",
             currency: "BRL",
-            grandTotal: (price * params.passengers).toString(),
+            grandTotal: priceValue > 0 ? (priceValue * params.passengers).toString() : "Consultar",
           },
           itineraries: [
             {
@@ -208,22 +211,26 @@ export async function searchWithAmadeus(
       // Gerar link de afiliado uma vez
       const affiliateUrl = await getTravelpayoutsLink(params);
 
-      return (data.data || []).map((offer: any, idx: number) => ({
-        id: `amadeus-${idx}-${offer.price?.total || 0}`,
-        price: {
-          total: offer.price?.total || "0",
-          currency: "BRL",
-          grandTotal: offer.price?.grandTotal || offer.price?.total || "0",
-        },
-        itineraries: offer.itineraries || [],
-        oneWay: !params.returnDate,
-        airline: offer.validatingAirlineCodes?.[0] || "UNKNOWN",
-        airlineLogo: "",
-        flightNumber: "",
-        amenities: [],
-        stops: 0,
-        purchaseUrl: affiliateUrl, // Link de afiliado com cashback!
-      }));
+      return (data.data || []).map((offer: any, idx: number) => {
+        const priceValue = parseFloat(offer.price?.total || offer.price?.grandTotal || 0);
+        
+        return {
+          id: `amadeus-${idx}-${priceValue}`,
+          price: {
+            total: priceValue > 0 ? priceValue.toFixed(2) : "Consultar",
+            currency: "BRL",
+            grandTotal: priceValue > 0 ? (priceValue * params.passengers).toFixed(2) : "Consultar",
+          },
+          itineraries: offer.itineraries || [],
+          oneWay: !params.returnDate,
+          airline: offer.validatingAirlineCodes?.[0] || "UNKNOWN",
+          airlineLogo: "",
+          flightNumber: "",
+          amenities: [],
+          stops: 0,
+          purchaseUrl: affiliateUrl, // Link de afiliado com cashback!
+        };
+      });
     }
   } catch (error) {
     console.error("[Amadeus] Error:", error);
@@ -291,16 +298,16 @@ export async function searchWithSkyscanner(params: SearchParams): Promise<Flight
     const affiliateUrl = await getTravelpayoutsLink(params);
 
     return itineraries.slice(0, 50).map((itin: any, idx: number) => {
-      const price = itin.price?.raw || 0;
+      const priceValue = parseFloat(itin.price?.raw || itin.price?.formatted || 0);
       const legs = itin.legs || [];
       const firstLeg = legs[0] || {};
 
       return {
-        id: `skyscanner-${idx}-${price}`,
+        id: `skyscanner-${idx}-${priceValue}`,
         price: {
-          total: price.toString(),
+          total: priceValue > 0 ? priceValue.toFixed(2) : "Consultar",
           currency: "BRL",
-          grandTotal: price.toString(),
+          grandTotal: priceValue > 0 ? (priceValue * params.passengers).toFixed(2) : "Consultar",
         },
         itineraries: legs.map((leg: any) => ({
           duration: `PT${leg.durationInMinutes || 120}M`,
