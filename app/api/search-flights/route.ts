@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchWithSerpAPI, searchWithAmadeus, searchWithKiwi } from '@/lib/flight-providers';
+import { searchWithSerpAPI, searchWithAmadeus, searchWithKiwi, searchWithSkyscanner } from '@/lib/flight-providers';
 import { SearchParams } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
@@ -20,8 +20,21 @@ export async function POST(request: NextRequest) {
     // Tentar buscar com diferentes providers em cascata
     let flights = [];
 
-    // 1. Tentar SerpAPI (Google Flights) - mais confiável
-    console.log('[API] Trying SerpAPI...');
+    // 1. Tentar Skyscanner (via RapidAPI) - maior cobertura
+    console.log('[API] Trying Skyscanner...');
+    flights = await searchWithSkyscanner(params);
+    
+    if (flights.length > 0) {
+      console.log(`[API] Skyscanner returned ${flights.length} flights`);
+      return NextResponse.json({ 
+        flights, 
+        provider: 'Skyscanner',
+        count: flights.length 
+      });
+    }
+
+    // 2. Tentar SerpAPI (Google Flights) - preços confiáveis
+    console.log('[API] Skyscanner returned no flights, trying SerpAPI...');
     flights = await searchWithSerpAPI(params);
     
     if (flights.length > 0) {
@@ -33,7 +46,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 2. Tentar Amadeus
+    // 3. Tentar Amadeus
     console.log('[API] SerpAPI returned no flights, trying Amadeus...');
     flights = await searchWithAmadeus(params);
     

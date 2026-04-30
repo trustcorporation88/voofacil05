@@ -8,6 +8,7 @@ const AMADEUS_API_KEY = process.env.AMADEUS_API_KEY;
 const AMADEUS_API_SECRET = process.env.AMADEUS_API_SECRET;
 const SERPAPI_KEY = process.env.SERPAPI_KEY;
 const KIWI_API_KEY = process.env.KIWI_API_KEY;
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 
 // Debug: Log environment variables (apenas primeiros/últimos caracteres por segurança)
 console.log("[ENV] Variables loaded:", {
@@ -15,6 +16,7 @@ console.log("[ENV] Variables loaded:", {
   AMADEUS_API_KEY: AMADEUS_API_KEY ? `${AMADEUS_API_KEY.slice(0, 10)}...` : "NOT SET",
   AMADEUS_API_SECRET: AMADEUS_API_SECRET ? `${AMADEUS_API_SECRET.slice(0, 10)}...` : "NOT SET",
   KIWI_API_KEY: KIWI_API_KEY ? `${KIWI_API_KEY.slice(0, 10)}...${KIWI_API_KEY.slice(-10)}` : "NOT SET",
+  RAPIDAPI_KEY: RAPIDAPI_KEY ? `${RAPIDAPI_KEY.slice(0, 10)}...${RAPIDAPI_KEY.slice(-10)}` : "NOT SET",
 });
 
 // Token Amadeus
@@ -311,6 +313,104 @@ export async function searchWithKiwi(params: SearchParams): Promise<Flight[]> {
     }
   } catch (error) {
     console.error("[Kiwi] Error:", error);
+  }
+
+  return [];
+}
+
+// ============ SKYSCANNER (via RapidAPI) ============
+export async function searchWithSkyscanner(params: SearchParams): Promise<Flight[]> {
+  console.log("[Skyscanner] Starting search...");
+  
+  if (!RAPIDAPI_KEY) {
+    console.log("[Skyscanner] No RapidAPI key found");
+    return [];
+  }
+
+  try {
+    // Skyscanner via Sky Scrapper API
+    const url = `https://sky-scrapper.p.rapidapi.com/api/v1/flights/searchFlights`;
+    
+    const queryParams = new URLSearchParams({
+      originSkyId: params.origin,
+      destinationSkyId: params.destination,
+      originEntityId: params.origin,
+      destinationEntityId: params.destination,
+      date: params.departureDate,
+      adults: params.passengers.toString(),
+      currency: "BRL",
+      market: "BR",
+      locale: "pt-BR"
+    });
+
+    if (params.returnDate) {
+      queryParams.append("returnDate", params.returnDate);
+    }
+
+    const res = await fetch(`${url}?${queryParams}`, {
+      method: "GET",
+      headers: {
+        "X-RapidAPI-Key": RAPIDAPI_KEY,
+        "X-RapidAPI-Host": "sky-scrapper.p.rapidapi.com"
+      },
+      signal: AbortSignal.timeout(15000),
+    });
+
+    console.log(`[Skyscanner] Response status: ${res.status}`);
+    
+    if (!res.ok) {
+      const errorData = await res.text();
+      console.log(`[Skyscanner] Error response:`, errorData);
+      return [];
+    }
+    
+    const data = await res.json();
+    console.log(`[Skyscanner] Response data:`, {
+      status: data.status,
+      itineraries_length: data.data?.itineraries?.length || 0,
+    });
+
+    const itineraries = data.data?.itineraries || [];
+    console.log(`[Skyscanner] Found ${itineraries.length} flights`);
+
+    return itineraries.slice(0, 50).map((itin: any, idx: number) => {
+      const price = itin.price?.raw || 0;
+      const legs = itin.legs || [];
+      const firstLeg = legs[0] || {};
+
+      return {
+        id: `skyscanner-${idx}-${price}`,
+        price: {
+          total: price.toString(),
+          currency: "BRL",
+          grandTotal: price.toString(),
+        },
+        itineraries: legs.map((leg: any) => ({
+          duration: `PT${leg.durationInMinutes || 120}M`,
+          segments: (leg.segments || []).map((seg: any) => ({
+            departure: {
+              iataCode: seg.origin?.displayCode || params.origin,
+              at: seg.departure || new Date().toISOString(),
+            },
+            arrival: {
+              iataCode: seg.destination?.displayCode || params.destination,
+              at: seg.arrival || new Date().toISOString(),
+            },
+            carrierCode: seg.marketingCarrier?.alternateId || "UNKNOWN",
+            number: seg.flightNumber || "0000",
+          })),
+        })),
+        oneWay: !params.returnDate,
+        airline: firstLeg.carriers?.marketing?.[0]?.name || "UNKNOWN",
+        airlineLogo: firstLeg.carriers?.marketing?.[0]?.imageUrl || "",
+        flightNumber: firstLeg.segments?.[0]?.flightNumber || "",
+        amenities: [],
+        stops: firstLeg.stopCount || 0,
+        purchaseUrl: `https://www.skyscanner.com.br/`,
+      };
+    });
+  } catch (error) {
+    console.error("[Skyscanner] Error:", error);
   }
 
   return [];
