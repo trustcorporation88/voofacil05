@@ -214,6 +214,16 @@ export async function searchWithAmadeus(
       return (data.data || []).map((offer: any, idx: number) => {
         const priceValue = parseFloat(offer.price?.total || offer.price?.grandTotal || 0);
         
+        // DEBUG: Log primeiro voo
+        if (idx === 0) {
+          console.log('[Amadeus] Sample price data:', {
+            price_total: offer.price?.total,
+            price_grandTotal: offer.price?.grandTotal,
+            price_full: offer.price,
+            calculated: priceValue
+          });
+        }
+        
         return {
           id: `amadeus-${idx}-${priceValue}`,
           price: {
@@ -301,6 +311,16 @@ export async function searchWithSkyscanner(params: SearchParams): Promise<Flight
       const priceValue = parseFloat(itin.price?.raw || itin.price?.formatted || 0);
       const legs = itin.legs || [];
       const firstLeg = legs[0] || {};
+
+      // DEBUG: Log para ver estrutura do preço
+      if (idx === 0) {
+        console.log('[Skyscanner] Sample price data:', {
+          price_raw: itin.price?.raw,
+          price_formatted: itin.price?.formatted,
+          price_object: itin.price,
+          calculated_priceValue: priceValue
+        });
+      }
 
       return {
         id: `skyscanner-${idx}-${priceValue}`,
