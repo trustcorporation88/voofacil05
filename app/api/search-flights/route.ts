@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchWithSerpAPI, searchWithAmadeus, searchWithKiwi, searchWithSkyscanner } from '@/lib/flight-providers';
+import { searchWithSerpAPI, searchWithAmadeus, searchWithSkyscanner } from '@/lib/flight-providers';
 import { searchTravelpayoutsFlights } from '@/lib/travelpayouts';
 import { SearchParams } from '@/lib/types';
 
@@ -77,27 +77,9 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 5. Tentar Kiwi (última opção) - OPCIONAL - links com afiliado
-    if (process.env.KIWI_API_KEY) {
-      console.log('[API] Amadeus returned no flights, trying Kiwi...');
-      flights = await searchWithKiwi(params);
-      
-      if (flights.length > 0) {
-        console.log(`[API] Kiwi returned ${flights.length} flights (links com afiliado)`);
-        return NextResponse.json({ 
-          flights, 
-          provider: 'Kiwi',
-          count: flights.length,
-          affiliate: true
-        });
-      }
-    } else {
-      console.log('[API] Kiwi API key not configured, skipping...');
-    }
-
     // Nenhum provider retornou resultados
     console.log('[API] No flights found from any provider');
-    return NextResponse.json({ 
+    return NextResponse.json({
       flights: [], 
       provider: 'none',
       count: 0,
