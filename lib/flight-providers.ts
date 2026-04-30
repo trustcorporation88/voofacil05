@@ -2,6 +2,7 @@
 "use server";
 
 import { SearchParams, Flight } from "@/lib/types";
+import { getTravelpayoutsLink } from "@/lib/travelpayouts";
 
 const AMADEUS_BASE_URL = "https://test.api.amadeus.com";
 const AMADEUS_API_KEY = process.env.AMADEUS_API_KEY;
@@ -140,9 +141,7 @@ export async function searchWithSerpAPI(
           flightNumber: firstSegment.flight_number || "0000",
           amenities: [],
           stops: (flight.flights?.length || 1) - 1,
-          purchaseUrl:
-            flight.booking_link ||
-            `https://www.google.com/flights?hl=pt-BR#search;f=${params.origin};t=${params.destination};d=${params.departureDate}${params.returnDate ? `;r=${params.returnDate}` : ""}`,
+          purchaseUrl: getTravelpayoutsLink(params), // Link de afiliado com cashback!
         };
       });
     }
@@ -219,7 +218,7 @@ export async function searchWithAmadeus(
         flightNumber: "",
         amenities: [],
         stops: 0,
-        purchaseUrl: `https://www.google.com/flights?hl=pt-BR#search;f=${params.origin};t=${params.destination};d=${params.departureDate}`,
+        purchaseUrl: getTravelpayoutsLink(params), // Link de afiliado com cashback!
       }));
     }
   } catch (error) {
@@ -308,7 +307,7 @@ export async function searchWithKiwi(params: SearchParams): Promise<Flight[]> {
         flightNumber: "",
         amenities: [],
         stops: flight.route?.length - 1 || 0,
-        purchaseUrl: flight.deep_link || "",
+        purchaseUrl: getTravelpayoutsLink(params), // Link de afiliado com cashback!
       }));
     }
   } catch (error) {
@@ -406,7 +405,7 @@ export async function searchWithSkyscanner(params: SearchParams): Promise<Flight
         flightNumber: firstLeg.segments?.[0]?.flightNumber || "",
         amenities: [],
         stops: firstLeg.stopCount || 0,
-        purchaseUrl: `https://www.skyscanner.com.br/`,
+        purchaseUrl: getTravelpayoutsLink(params), // Link de afiliado com cashback!
       };
     });
   } catch (error) {

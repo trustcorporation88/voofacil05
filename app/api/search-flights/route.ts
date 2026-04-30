@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchWithSerpAPI, searchWithAmadeus, searchWithKiwi, searchWithSkyscanner } from '@/lib/flight-providers';
+import { searchTravelpayoutsFlights } from '@/lib/travelpayouts';
 import { SearchParams } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
@@ -20,56 +21,74 @@ export async function POST(request: NextRequest) {
     // Tentar buscar com diferentes providers em cascata
     let flights = [];
 
-    // 1. Tentar Skyscanner (via RapidAPI) - maior cobertura
-    console.log('[API] Trying Skyscanner...');
-    flights = await searchWithSkyscanner(params);
+    // 1. Tentar Travelpayouts PRIMEIRO (você recebe cashback direto!)
+    console.log('[API] Trying Travelpayouts...');
+    flights = await searchTravelpayoutsFlights(params);
     
     if (flights.length > 0) {
-      console.log(`[API] Skyscanner returned ${flights.length} flights`);
+      console.log(`[API] Travelpayouts returned ${flights.length} flights`);
       return NextResponse.json({ 
         flights, 
-        provider: 'Skyscanner',
-        count: flights.length 
+        provider: 'Travelpayouts (Aviasales)',
+        count: flights.length,
+        affiliate: true // Indica que são links de afiliado
       });
     }
 
-    // 2. Tentar SerpAPI (Google Flights) - preços confiáveis
+    // 2. Tentar Skyscanner (via RapidAPI) - TODOS os links redirecionam para Travelpayouts
+    console.log('[API] Travelpayouts returned no flights, trying Skyscanner...');
+    flights = await searchWithSkyscanner(params);
+    
+    if (flights.length > 0) {
+      console.log(`[API] Skyscanner returned ${flights.length} flights (links com afiliado)`);
+      return NextResponse.json({ 
+        flights, 
+        provider: 'Skyscanner',
+        count: flights.length,
+        affiliate: true
+      });
+    }
+
+    // 3. Tentar SerpAPI (Google Flights) - links com afiliado
     console.log('[API] Skyscanner returned no flights, trying SerpAPI...');
     flights = await searchWithSerpAPI(params);
     
     if (flights.length > 0) {
-      console.log(`[API] SerpAPI returned ${flights.length} flights`);
+      console.log(`[API] SerpAPI returned ${flights.length} flights (links com afiliado)`);
       return NextResponse.json({ 
         flights, 
         provider: 'SerpAPI (Google Flights)',
-        count: flights.length 
+        count: flights.length,
+        affiliate: true
       });
     }
 
-    // 3. Tentar Amadeus
+    // 4. Tentar Amadeus - links com afiliado
     console.log('[API] SerpAPI returned no flights, trying Amadeus...');
     flights = await searchWithAmadeus(params);
     
     if (flights.length > 0) {
-      console.log(`[API] Amadeus returned ${flights.length} flights`);
+      console.log(`[API] Amadeus returned ${flights.length} flights (links com afiliado)`);
       return NextResponse.json({ 
         flights, 
         provider: 'Amadeus',
-        count: flights.length 
+        count: flights.length,
+        affiliate: true
       });
     }
 
-    // 3. Tentar Kiwi (última opção) - OPCIONAL
+    // 5. Tentar Kiwi (última opção) - OPCIONAL - links com afiliado
     if (process.env.KIWI_API_KEY) {
       console.log('[API] Amadeus returned no flights, trying Kiwi...');
       flights = await searchWithKiwi(params);
       
       if (flights.length > 0) {
-        console.log(`[API] Kiwi returned ${flights.length} flights`);
+        console.log(`[API] Kiwi returned ${flights.length} flights (links com afiliado)`);
         return NextResponse.json({ 
           flights, 
           provider: 'Kiwi',
-          count: flights.length 
+          count: flights.length,
+          affiliate: true
         });
       }
     } else {

@@ -23,6 +23,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
+      <head>
+        {/* Travelpayouts Script */}
+        <script
+          async
+          src="//www.travelpayouts.com/weedle/widget.js?marker=720173"
+          charSet="utf-8"
+        />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}
       </body>
