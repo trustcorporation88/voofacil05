@@ -99,11 +99,22 @@ export async function searchWithSerpAPI(
       const affiliateUrl = await getTravelpayoutsLink(params);
 
       return allFlights.map((flight: any, idx: number) => {
-        const price = flight.price || 0;
-        const firstSegment = flight.flights?.[0] || {};
+        // Tentar múltiplos formatos de preço  
+        let priceValue = 0;
+        
+        if (flight.price && typeof flight.price === 'number') {
+          priceValue = flight.price;
+        } else if (flight.total_price) {
+          priceValue = parseFloat(flight.total_price);
+        } else if (flight.fare?.total) {
+          priceValue = parseFloat(flight.fare.total);
+        } else if (flight.value) {
+          priceValue = parseFloat(flight.value);
+        } else if (flight.amount) {
+          priceValue = parseFloat(flight.amount);
+        }
 
-        // Preço pode estar em diferentes formatos
-        const priceValue = price || flight.total_price || flight.fare?.total || 0;
+        const firstSegment = flight.flights?.[0] || {};
 
         return {
           id: `serp-${idx}-${priceValue}`,
@@ -212,15 +223,31 @@ export async function searchWithAmadeus(
       const affiliateUrl = await getTravelpayoutsLink(params);
 
       return (data.data || []).map((offer: any, idx: number) => {
-        const priceValue = parseFloat(offer.price?.total || offer.price?.grandTotal || 0);
+        // Tentar múltiplos formatos de preço
+        let priceValue = 0;
+        
+        if (offer.price) {
+          priceValue = parseFloat(
+            offer.price.total || 
+            offer.price.grandTotal || 
+            offer.price.base ||
+            offer.price.amount ||
+            offer.price.value ||
+            0
+          );
+        }
+        
+        // Se ainda for 0, tentar campos diretos
+        if (priceValue === 0) {
+          priceValue = parseFloat(offer.amount || offer.value || offer.total || 0);
+        }
         
         // DEBUG: Log primeiro voo
         if (idx === 0) {
           console.log('[Amadeus] Sample price data:', {
-            price_total: offer.price?.total,
-            price_grandTotal: offer.price?.grandTotal,
-            price_full: offer.price,
-            calculated: priceValue
+            price_object: offer.price,
+            calculated: priceValue,
+            raw_fields: { amount: offer.amount, value: offer.value, total: offer.total }
           });
         }
         

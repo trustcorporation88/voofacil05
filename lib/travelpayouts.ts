@@ -82,14 +82,15 @@ export async function searchTravelpayoutsFlights(params: {
     }
 
     return data.data.map((flight: any, idx: number) => {
-      const price = flight.value || 0;
+      // Tentar múltiplos campos de preço
+      const price = flight.value || flight.price || flight.amount || 0;
       
       return {
         id: `travelpayouts-${idx}-${price}`,
         price: {
-          total: price.toString(),
+          total: price > 0 ? price.toString() : "Consultar",
           currency: currency,
-          grandTotal: (price * (params.passengers || 1)).toString(),
+          grandTotal: price > 0 ? (price * (params.passengers || 1)).toString() : "Consultar",
         },
         itineraries: [{
           duration: `PT${flight.duration || 120}M`,
