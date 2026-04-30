@@ -46,17 +46,21 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 3. Tentar Kiwi (última opção)
-    console.log('[API] Amadeus returned no flights, trying Kiwi...');
-    flights = await searchWithKiwi(params);
-    
-    if (flights.length > 0) {
-      console.log(`[API] Kiwi returned ${flights.length} flights`);
-      return NextResponse.json({ 
-        flights, 
-        provider: 'Kiwi',
-        count: flights.length 
-      });
+    // 3. Tentar Kiwi (última opção) - OPCIONAL
+    if (process.env.KIWI_API_KEY) {
+      console.log('[API] Amadeus returned no flights, trying Kiwi...');
+      flights = await searchWithKiwi(params);
+      
+      if (flights.length > 0) {
+        console.log(`[API] Kiwi returned ${flights.length} flights`);
+        return NextResponse.json({ 
+          flights, 
+          provider: 'Kiwi',
+          count: flights.length 
+        });
+      }
+    } else {
+      console.log('[API] Kiwi API key not configured, skipping...');
     }
 
     // Nenhum provider retornou resultados
