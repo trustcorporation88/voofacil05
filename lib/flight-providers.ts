@@ -97,6 +97,9 @@ export async function searchWithSerpAPI(
         `#${i}: R$ ${f.price} (${f.flights?.[0]?.airline || 'N/A'})`
       ));
 
+      // Gerar link de afiliado uma vez para todos
+      const affiliateUrl = await getTravelpayoutsLink(params);
+
       return allFlights.map((flight: any, idx: number) => {
         const price = flight.price || 0;
         const firstSegment = flight.flights?.[0] || {};
@@ -141,7 +144,7 @@ export async function searchWithSerpAPI(
           flightNumber: firstSegment.flight_number || "0000",
           amenities: [],
           stops: (flight.flights?.length || 1) - 1,
-          purchaseUrl: getTravelpayoutsLink(params), // Link de afiliado com cashback!
+          purchaseUrl: affiliateUrl, // Link de afiliado com cashback!
         };
       });
     }
@@ -204,6 +207,9 @@ export async function searchWithAmadeus(
       });
       console.log(`[Amadeus] Found ${data.data?.length || 0} flights`);
 
+      // Gerar link de afiliado uma vez
+      const affiliateUrl = await getTravelpayoutsLink(params);
+
       return (data.data || []).map((offer: any, idx: number) => ({
         id: `amadeus-${idx}-${offer.price?.total || 0}`,
         price: {
@@ -218,7 +224,7 @@ export async function searchWithAmadeus(
         flightNumber: "",
         amenities: [],
         stops: 0,
-        purchaseUrl: getTravelpayoutsLink(params), // Link de afiliado com cashback!
+        purchaseUrl: affiliateUrl, // Link de afiliado com cashback!
       }));
     }
   } catch (error) {
@@ -277,6 +283,9 @@ export async function searchWithKiwi(params: SearchParams): Promise<Flight[]> {
       });
       console.log(`[Kiwi] Found ${data.data?.length || 0} flights`);
 
+      // Gerar link de afiliado uma vez
+      const affiliateUrl = await getTravelpayoutsLink(params);
+
       return (data.data || []).map((flight: any, idx: number) => ({
         id: `kiwi-${idx}-${flight.price || 0}`,
         price: {
@@ -307,7 +316,7 @@ export async function searchWithKiwi(params: SearchParams): Promise<Flight[]> {
         flightNumber: "",
         amenities: [],
         stops: flight.route?.length - 1 || 0,
-        purchaseUrl: getTravelpayoutsLink(params), // Link de afiliado com cashback!
+        purchaseUrl: affiliateUrl, // Link de afiliado com cashback!
       }));
     }
   } catch (error) {
@@ -372,6 +381,9 @@ export async function searchWithSkyscanner(params: SearchParams): Promise<Flight
     const itineraries = data.data?.itineraries || [];
     console.log(`[Skyscanner] Found ${itineraries.length} flights`);
 
+    // Gerar link de afiliado uma vez
+    const affiliateUrl = await getTravelpayoutsLink(params);
+
     return itineraries.slice(0, 50).map((itin: any, idx: number) => {
       const price = itin.price?.raw || 0;
       const legs = itin.legs || [];
@@ -405,7 +417,7 @@ export async function searchWithSkyscanner(params: SearchParams): Promise<Flight
         flightNumber: firstLeg.segments?.[0]?.flightNumber || "",
         amenities: [],
         stops: firstLeg.stopCount || 0,
-        purchaseUrl: getTravelpayoutsLink(params), // Link de afiliado com cashback!
+        purchaseUrl: affiliateUrl, // Link de afiliado com cashback!
       };
     });
   } catch (error) {

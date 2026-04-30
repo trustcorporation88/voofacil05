@@ -8,13 +8,13 @@ const TRAVELPAYOUTS_TOKEN = process.env.TRAVELPAYOUTS_TOKEN;
  * Gera link de afiliado Travelpayouts para busca de voos
  * Garante que você receba cashback/comissão de todas as vendas
  */
-export function getTravelpayoutsLink(params: {
+export async function getTravelpayoutsLink(params: {
   origin: string;
   destination: string;
   departureDate: string;
   returnDate?: string;
   passengers?: number;
-}): string {
+}): Promise<string> {
   const { origin, destination, departureDate, returnDate, passengers = 1 } = params;
   
   // Formato da data: DDMMYY
