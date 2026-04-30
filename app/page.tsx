@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { SearchParams, Flight } from "@/lib/types";
 import { SearchForm } from "@/components/search-form";
 import { Plane, Loader2 } from "lucide-react";
+import Image from "next/image";
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
@@ -49,15 +50,25 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
       <div className="max-w-6xl mx-auto px-4 py-12">
         <header className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-blue-900 mb-3">✈️ Voo Fácil</h1>
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/logo.png"
+              alt="Voo Fácil - Sua Jornada começa aqui"
+              width={400}
+              height={200}
+              priority
+              className="max-w-sm w-full h-auto"
+            />
+          </div>
           <p className="text-xl text-gray-600">
-            Busque os melhores voos em tempo real
+            Encontre os melhores preços em tempo real
           </p>
         </header>
 
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-12">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            🔍 Busque seu voo ideal
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <Plane className="w-6 h-6" />
+            Buscar Voos
           </h2>
           <SearchForm onSearch={handleSearch} loading={loading} />
         </div>

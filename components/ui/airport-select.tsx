@@ -55,7 +55,7 @@ export function AirportSelect({
           }
         }}
         onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 200)}
+        onBlur={() => setTimeout(() => setOpen(false), 250)}
         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       />
       {open && filtered.length > 0 && (
@@ -66,7 +66,10 @@ export function AirportSelect({
           {filtered.map((airport) => (
             <div
               key={airport.iataCode}
-              onClick={() => handleSelect(airport)}
+              onMouseDown={(e) => {
+                e.preventDefault(); // Previne o onBlur do input
+                handleSelect(airport);
+              }}
               className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
             >
               <div className="flex items-center justify-between">
