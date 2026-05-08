@@ -9,12 +9,20 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Cortex Airlines - Encontre os melhores voos",
-  description:
-    "Compare preços de voos em tempo real e receba alertas quando o preço cair.",
-  icons: {
-    icon: "/favicon.svg",
+  title: "VooFácil — Todas as Cias em Um Só Lugar",
+  description: "Compare preços de voos em tempo real com LATAM, Azul, Gol e mais. Receba alertas de preço grátis por e-mail quando a passagem cair.",
+  keywords: "passagem aérea barata, voos baratos, comparar voos, alerta de preço, LATAM, Azul, Gol",
+  openGraph: {
+    title: "VooFácil — Todas as Cias em Um Só Lugar",
+    description: "Compare preços de voos em tempo real. Alerta de preço grátis por e-mail.",
+    url: "https://www.vooscortex.com.br",
+    siteName: "VooFácil",
+    locale: "pt_BR",
+    type: "website",
   },
+  robots: { index: true, follow: true },
+  alternates: { canonical: "https://www.vooscortex.com.br" },
+  icons: { icon: "/favicon.svg" },
 };
 
 export default function RootLayout({
