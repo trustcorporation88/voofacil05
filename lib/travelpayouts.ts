@@ -17,23 +17,18 @@ export async function getTravelpayoutsLink(params: {
 }): Promise<string> {
   const { origin, destination, departureDate, returnDate, passengers = 1 } = params;
   
-  // Formato da data: DDMMYY
   const formatDate = (date: string) => {
     const d = new Date(date);
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = String(d.getFullYear()).slice(-2);
-    return `${day}${month}${year}`;
+    return `${day}${month}`;
   };
 
   const depDate = formatDate(departureDate);
   const retDate = returnDate ? formatDate(returnDate) : '';
+  const searchString = `${origin}${depDate}${destination}${retDate}${passengers}`;
   
-  // Link Aviasales (parceiro Travelpayouts)
-  // Formato: https://www.aviasales.com/search/ORIGIN_IATA[DDMMYY]DESTINATION_IATA[DDMMYY]?marker=YOUR_MARKER
-  const searchString = `${origin}${depDate}${destination}${retDate}`;
-  
-  return `https://www.aviasales.com/search/${searchString}?adults=${passengers}&marker=${TRAVELPAYOUTS_MARKER}`;
+  return `https://www.aviasales.com/search/${searchString}?marker=${TRAVELPAYOUTS_MARKER}`;
 }
 
 /**
@@ -53,72 +48,174 @@ export async function searchTravelpayoutsFlights(params: {
     return [];
   }
 
-  const { origin, destination, currency = 'BRL' } = params;
+  const { origin, destination, departureDate, returnDate, currency = 'BRL' } = params;
+
+  const fetchPrices = async (orig: string, dest: string, targetDate: string) => {
+    const u = new URL('https://api.travelpayouts.com/aviasales/v3/prices_for_dates');
+    u.searchParams.append('origin', orig);
+    u.searchParams.append('destination', dest);
+    u.searchParams.append('currency', currency);
+    u.searchParams.append('token', TRAVELPAYOUTS_TOKEN);
+    u.searchParams.append('limit', '200');
+    u.searchParams.append('sorting', 'price');
+
+    try {
+      const res = await fetch(u.toString(), { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) return [];
+      const json = await res.json();
+      if (!json.success || !json.data) return [];
+      
+      const target = new Date(targetDate).getTime();
+      const filtered = json.data
+        .filter((f: any) => {
+          if (!f.departure_at) return true;
+          const diff = Math.abs(new Date(f.departure_at).getTime() - target);
+          return diff < 7 * 24 * 60 * 60 * 1000;
+        })
+        .sort((a: any, b: any) => (a.price || 0) - (b.price || 0));
+
+      return filtered.length > 0 ? filtered : json.data
+        .sort((a: any, b: any) => (a.price || 0) - (b.price || 0))
+        .slice(0, 3);
+    } catch {
+      return [];
+    }
+  };
 
   try {
-    // API de preços da Travelpayouts
-    const url = new URL('https://api.travelpayouts.com/aviasales/v3/prices_for_dates');
+    const outbound = await fetchPrices(origin, destination, departureDate);
+    const returnFlights = returnDate ? await fetchPrices(destination, origin, returnDate) : [];
+
+    if (outbound.length === 0) {
+      console.log('[Travelpayouts] No outbound flights found');
+      return [];
+    }
+
+    const cheapestReturn = returnFlights[0];
+    const hasReturn = !!cheapestReturn;
+    const limit = hasReturn ? 15 : 25;
+
+    const results = outbound.slice(0, limit).map((flight: any, idx: number) => {
+      const price = flight.price || 0;
+      const returnPrice = cheapestReturn?.price || 0;
+      const totalPrice = hasReturn ? price + returnPrice : price;
+
+      const fmt = (date: string) => {
+        const d = new Date(date);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        return `${day}${month}`;
+      };
+
+      const depUrl = fmt(params.departureDate);
+      const retUrl = params.returnDate ? fmt(params.returnDate) : '';
+      const adults = params.passengers || 1;
+      const searchPath = `${origin}${depUrl}${destination}${retUrl}${adults}`;
+      const purchaseUrl = `https://www.aviasales.com/search/${searchPath}?marker=${TRAVELPAYOUTS_MARKER}`;
+
+      const itineraries = [];
+      const depTime = flight.departure_at || departureDate;
+      const durOut = flight.duration_to || flight.duration || 60;
+      
+      itineraries.push({
+        duration: `PT${durOut}M`,
+        segments: [{
+          departure: { iataCode: flight.origin_airport || origin, at: depTime },
+          arrival: { iataCode: flight.destination_airport || destination, at: new Date(new Date(depTime).getTime() + durOut * 60000).toISOString() },
+          carrierCode: flight.airline || 'UNKNOWN',
+          number: flight.flight_number?.toString() || '0000',
+        }],
+      });
+
+      if (hasReturn) {
+        const retDur = cheapestReturn?.duration_to || cheapestReturn?.duration || 60;
+        const retTime = cheapestReturn?.departure_at || `${returnDate}T12:00:00`;
+        itineraries.push({
+          duration: `PT${retDur}M`,
+          segments: [{
+            departure: { iataCode: cheapestReturn?.origin_airport || destination, at: retTime },
+            arrival: { iataCode: cheapestReturn?.destination_airport || origin, at: new Date(new Date(retTime).getTime() + retDur * 60000).toISOString() },
+            carrierCode: cheapestReturn?.airline || flight.airline || 'UNKNOWN',
+            number: (cheapestReturn?.flight_number || flight.flight_number || '0000').toString(),
+          }],
+        });
+      }
+      
+      return {
+        id: `travelpayouts-${idx}-${totalPrice}`,
+        price: {
+          total: totalPrice > 0 ? totalPrice.toString() : "Consultar",
+          currency,
+          grandTotal: totalPrice > 0 ? (totalPrice * (params.passengers || 1)).toString() : "Consultar",
+        },
+        itineraries,
+        oneWay: !hasReturn,
+        airline: flight.airline || 'UNKNOWN',
+        airlineLogo: '',
+        flightNumber: flight.flight_number?.toString() || '',
+        amenities: [],
+        stops: flight.transfers || flight.number_of_changes || 0,
+        purchaseUrl,
+      };
+    });
+
+    return results;
+  } catch (error) {
+    console.error('[Travelpayouts] Error:', error);
+    return [];
+  }
+}
+
+export async function getPriceMonthMatrix(params: {
+  origin: string;
+  destination: string;
+  month: string;
+  currency?: string;
+}) {
+  if (!TRAVELPAYOUTS_TOKEN) {
+    console.log('[Travelpayouts] No API token found for month matrix');
+    return null;
+  }
+
+  const { origin, destination, month, currency = 'BRL' } = params;
+
+  try {
+    const url = new URL('https://api.travelpayouts.com/v2/prices/month-matrix');
     url.searchParams.append('origin', origin);
     url.searchParams.append('destination', destination);
+    url.searchParams.append('month', month);
     url.searchParams.append('currency', currency);
     url.searchParams.append('token', TRAVELPAYOUTS_TOKEN);
-    url.searchParams.append('limit', '50');
-    url.searchParams.append('sorting', 'price');
+    url.searchParams.append('show_to_affiliates', 'true');
 
     const response = await fetch(url.toString(), {
       signal: AbortSignal.timeout(10000),
     });
 
     if (!response.ok) {
-      console.log(`[Travelpayouts] API error: ${response.status}`);
-      return [];
+      console.log(`[Travelpayouts] Month matrix error: ${response.status}`);
+      return null;
     }
 
     const data = await response.json();
-    
+
     if (!data.success || !data.data) {
-      console.log('[Travelpayouts] No flights found');
-      return [];
+      console.log('[Travelpayouts] No month matrix data');
+      return null;
     }
 
-    return data.data.map((flight: any, idx: number) => {
-      // Tentar múltiplos campos de preço
-      const price = flight.value || flight.price || flight.amount || 0;
-      
-      return {
-        id: `travelpayouts-${idx}-${price}`,
-        price: {
-          total: price > 0 ? price.toString() : "Consultar",
-          currency: currency,
-          grandTotal: price > 0 ? (price * (params.passengers || 1)).toString() : "Consultar",
-        },
-        itineraries: [{
-          duration: `PT${flight.duration || 120}M`,
-          segments: [{
-            departure: {
-              iataCode: origin,
-              at: flight.departure_at || new Date().toISOString(),
-            },
-            arrival: {
-              iataCode: destination,
-              at: flight.return_at || new Date().toISOString(),
-            },
-            carrierCode: flight.airline || 'UNKNOWN',
-            number: flight.flight_number?.toString() || '0000',
-          }],
-        }],
-        oneWay: !params.returnDate,
-        airline: flight.airline || 'UNKNOWN',
-        airlineLogo: '',
-        flightNumber: flight.flight_number?.toString() || '',
-        amenities: [],
-        stops: flight.transfers || 0,
-        // Link de afiliado com SEU marker!
-        purchaseUrl: getTravelpayoutsLink(params),
-      };
-    });
+    return data.data;
   } catch (error) {
-    console.error('[Travelpayouts] Error:', error);
-    return [];
+    console.error('[Travelpayouts] Month matrix error:', error);
+    return null;
   }
+}
+
+export async function getTravelpayoutsCalendarLink(params: {
+  origin: string;
+  destination: string;
+  departureDate?: string;
+}) {
+  const { origin, destination } = params;
+  return `https://www.aviasales.com/search/${origin}${destination}?marker=${TRAVELPAYOUTS_MARKER}`;
 }

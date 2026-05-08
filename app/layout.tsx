@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { SessionProvider } from "@/components/session-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -8,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Voo Fácil - Encontre os melhores voos",
+  title: "Cortex Airlines - Encontre os melhores voos",
   description:
     "Compare preços de voos em tempo real e receba alertas quando o preço cair.",
   icons: {
@@ -32,7 +33,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
+        <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
   );

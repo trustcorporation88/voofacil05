@@ -19,6 +19,19 @@ body {
   transition: all 0.2s ease;
 }
 
+/* Landing page utilities */
+.horizon-line {
+  height: 1px;
+  width: 100%;
+  background-color: #d1d5db;
+}
+
+.glass-nav {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background-color: rgba(249, 249, 255, 0.8);
+}
+
 /* FORÇAR DROPDOWN AZUL - MÁXIMA PRIORIDADE */
 .airport-dropdown-blue {
   background-color: #eff6ff !important;

@@ -14,7 +14,8 @@ export const REGIONS: Region[] = [
     description: 'Principais cidades brasileiras',
     airports: [
       'GIG', 'GRU', 'CGH', 'VCP', 'SDU', 'SSA', 'CNF', 'REC', 'FOR',
-      'MAO', 'BEL', 'POA', 'CWB', 'BSB', 'MAE', 'MCZ', 'NAT', 'PLU'
+      'MAO', 'BEL', 'POA', 'CWB', 'BSB', 'MAE', 'MCZ', 'NAT', 'PLU',
+      'PMW', 'FLN', 'NVT', 'JOI', 'XAP'
     ]
   },
   {
@@ -48,7 +49,7 @@ export const REGIONS: Region[] = [
       'LUX', 'BRU', 'CPH', 'ARN', 'GOT', 'OSL', 'DUB', 'ATH', 'FAO',
       'TNG', 'IBZ', 'VLC', 'BIO', 'SVQ', 'BVA', 'LYS', 'MRS', 'TLS',
       'NCE', 'RSP', 'TRN', 'VCE', 'BLQ', 'NAP', 'PMO', 'CTA', 'MST',
-      'WMI', 'KRK', 'GDN', 'BTS', 'OTP', 'IST', 'SKP'
+      'CAG', 'OLB', 'AHO', 'WMI', 'KRK', 'GDN', 'BTS', 'OTP', 'IST', 'SKP'
     ]
   },
   {

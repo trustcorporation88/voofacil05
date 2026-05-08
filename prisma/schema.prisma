@@ -1,0 +1,163 @@
+// Prisma Schema para VooFacil
+// Database: PostgreSQL (Neon/Supabase)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth Models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  password      String?   // Hash bcrypt para login com email
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  savedSearches SavedSearch[]
+  searchHistory SearchHistory[]
+  priceAlerts   PriceAlert[]
+  notifications Notification[]
+  pushSubscription PushSubscription?
+  disclaimerAcceptance DisclaimerAcceptance?
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// VooFacil Custom Models
+model SavedSearch {
+  id            String   @id @default(cuid())
+  userId        String
+  name          String   // Nome dado pelo usuário (ex: "Viagem Paris")
+  origin        String
+  destination   String
+  departureDate String
+  returnDate    String?
+  passengers    Int      @default(1)
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model SearchHistory {
+  id            String   @id @default(cuid())
+  userId        String
+  origin        String
+  destination   String
+  departureDate String
+  returnDate    String?
+  passengers    Int      @default(1)
+  timestamp     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([timestamp])
+}
+
+model PriceAlert {
+  id              String    @id @default(cuid())
+  userId          String
+  origin          String
+  originName      String?
+  destination     String
+  destinationName String?
+  departureDate   String
+  returnDate      String?
+  passengers      Int       @default(1)
+  targetPrice     Float
+  currency        String    @default("BRL")
+  tripType        String    @default("oneWay")
+  isActive        Boolean   @default(true)
+  lastChecked     DateTime?
+  lastPrice       Float?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@index([userId])
+  @@index([isActive, lastChecked])
+}
+
+model PushSubscription {
+  userId   String @id
+  endpoint String
+  p256dh   String
+  auth     String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DisclaimerAcceptance {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  acceptedAt DateTime @default(now())
+  ip        String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  alertId   String?
+  message   String
+  read      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alert PriceAlert? @relation(fields: [alertId], references: [id], onDelete: SetNull)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+}

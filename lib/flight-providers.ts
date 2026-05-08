@@ -88,33 +88,63 @@ export async function searchWithSerpAPI(
       const allFlights = [
         ...(data.best_flights || []),
         ...(data.other_flights || []),
-      ];
+      ].filter((f: any) => f.price && f.price > 0)
+       .sort((a: any, b: any) => (a.price || 999999) - (b.price || 999999));
 
       console.log(`[SerpAPI] Found ${allFlights.length} flights`);
-      console.log(`[SerpAPI] Flight prices:`, allFlights.slice(0, 10).map((f: any, i: number) => 
-        `#${i}: R$ ${f.price} (${f.flights?.[0]?.airline || 'N/A'})`
-      ));
 
-      // Gerar link de afiliado uma vez para todos
-      const affiliateUrl = await getTravelpayoutsLink(params);
+      return allFlights.slice(0, 20).map((flight: any, idx: number) => {
+        let priceValue = typeof flight.price === 'number' ? flight.price : parseFloat(flight.price) || 0;
 
-      return allFlights.map((flight: any, idx: number) => {
-        // Tentar múltiplos formatos de preço  
-        let priceValue = 0;
+        const allSegments = flight.flights || [];
+        const isRoundTrip = !!(params.returnDate);
+
+        const itineraries = [];
         
-        if (flight.price && typeof flight.price === 'number') {
-          priceValue = flight.price;
-        } else if (flight.total_price) {
-          priceValue = parseFloat(flight.total_price);
-        } else if (flight.fare?.total) {
-          priceValue = parseFloat(flight.fare.total);
-        } else if (flight.value) {
-          priceValue = parseFloat(flight.value);
-        } else if (flight.amount) {
-          priceValue = parseFloat(flight.amount);
+        const outboundSegs = isRoundTrip ? allSegments.slice(0, Math.ceil(allSegments.length / 2)) : allSegments;
+        const returnSegs = isRoundTrip ? allSegments.slice(Math.ceil(allSegments.length / 2)) : [];
+
+        itineraries.push({
+          duration: `PT${flight.total_duration || 120}M`,
+          segments: outboundSegs.map((seg: any) => ({
+            departure: {
+              iataCode: seg.departure_airport?.id || params.origin,
+              at: new Date((seg.departure_airport?.time || params.departureDate).replace(" ", "T")).toISOString(),
+            },
+            arrival: {
+              iataCode: seg.arrival_airport?.id || params.destination,
+              at: new Date((seg.arrival_airport?.time || params.departureDate).replace(" ", "T")).toISOString(),
+            },
+            carrierCode: seg.airline || "UNKNOWN",
+            number: seg.flight_number || "0000",
+          })),
+        });
+
+        if (returnSegs.length > 0) {
+          itineraries.push({
+            duration: `PT${flight.total_duration || 120}M`,
+            segments: returnSegs.map((seg: any) => ({
+              departure: {
+                iataCode: seg.departure_airport?.id || params.destination,
+                at: new Date((seg.departure_airport?.time || params.returnDate || '').replace(" ", "T")).toISOString(),
+              },
+              arrival: {
+                iataCode: seg.arrival_airport?.id || params.origin,
+                at: new Date((seg.arrival_airport?.time || params.returnDate || '').replace(" ", "T")).toISOString(),
+              },
+              carrierCode: seg.airline || "UNKNOWN",
+              number: seg.flight_number || "0000",
+            })),
+          });
         }
 
-        const firstSegment = flight.flights?.[0] || {};
+        const fmt = (date: string) => {
+          const d = new Date(date);
+          return `${String(d.getDate()).padStart(2, '0')}${String(d.getMonth() + 1).padStart(2, '0')}`;
+        };
+        const dep = fmt(params.departureDate);
+        const ret = params.returnDate ? fmt(params.returnDate) : '';
+        const url = `https://www.aviasales.com/search/${params.origin}${dep}${params.destination}${ret}${params.passengers || 1}?marker=${process.env.TRAVELPAYOUTS_MARKER || '720173'}`;
 
         return {
           id: `serp-${idx}-${priceValue}`,
@@ -123,40 +153,14 @@ export async function searchWithSerpAPI(
             currency: "BRL",
             grandTotal: priceValue > 0 ? (priceValue * params.passengers).toString() : "Consultar",
           },
-          itineraries: [
-            {
-              duration: `PT${flight.total_duration || 120}M`,
-              segments: (flight.flights || [firstSegment]).map((seg: any) => ({
-                departure: {
-                  iataCode: seg.departure_airport?.id || params.origin,
-                  at: new Date(
-                    (seg.departure_airport?.time || params.departureDate).replace(
-                      " ",
-                      "T",
-                    ),
-                  ).toISOString(),
-                },
-                arrival: {
-                  iataCode: seg.arrival_airport?.id || params.destination,
-                  at: new Date(
-                    (seg.arrival_airport?.time || params.departureDate).replace(
-                      " ",
-                      "T",
-                    ),
-                  ).toISOString(),
-                },
-                carrierCode: seg.airline || "UNKNOWN",
-                number: seg.flight_number || "0000",
-              })),
-            },
-          ],
-          oneWay: !params.returnDate,
-          airline: firstSegment.airline || "UNKNOWN",
-          airlineLogo: firstSegment.airline_logo || "",
-          flightNumber: firstSegment.flight_number || "0000",
+          itineraries,
+          oneWay: !isRoundTrip,
+          airline: allSegments[0]?.airline || "UNKNOWN",
+          airlineLogo: allSegments[0]?.airline_logo || "",
+          flightNumber: allSegments[0]?.flight_number || "0000",
           amenities: [],
-          stops: (flight.flights?.length || 1) - 1,
-          purchaseUrl: affiliateUrl, // Link de afiliado com cashback!
+          stops: outboundSegs.length - 1,
+          purchaseUrl: url,
         };
       });
     }

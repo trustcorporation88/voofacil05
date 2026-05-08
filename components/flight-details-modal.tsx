@@ -1,7 +1,8 @@
 "use client";
 
-import { X, Plane, Clock, MapPin } from "lucide-react";
+import { X, Plane, Clock, MapPin, Luggage } from "lucide-react";
 import type { Flight, SearchParams } from "@/lib/types";
+import { useState } from "react";
 
 interface FlightDetailsModalProps {
   flight: Flight;
@@ -10,6 +11,12 @@ interface FlightDetailsModalProps {
 }
 
 export function FlightDetailsModal({ flight, searchParams, onClose }: FlightDetailsModalProps) {
+  const [includeBaggage, setIncludeBaggage] = useState(false);
+
+  const basePrice = parseFloat(flight.price.total) || 0;
+  const baggageFee = flight.oneWay ? 100 : 200;
+  const totalPrice = includeBaggage ? basePrice + baggageFee : basePrice;
+
   const formatTime = (isoString: string) => {
     try {
       const date = new Date(isoString);
@@ -60,30 +67,52 @@ export function FlightDetailsModal({ flight, searchParams, onClose }: FlightDeta
 
         {/* Price Section */}
         <div className="p-6 bg-gradient-to-r from-blue-50 to-cyan-50 border-b">
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Preço por pessoa</p>
+              <p className="text-sm text-gray-600 mb-1">Preço por pessoa (taxas inclusas)</p>
               <p className="text-4xl font-bold text-blue-600">
-                R$ {flight.price.total}
+                R$ {totalPrice.toFixed(0)}
               </p>
+              {includeBaggage && (
+                <p className="text-xs text-green-600 mt-1">
+                  <Luggage className="w-3 h-3 inline mr-1" />
+                  Inclui bagagem despachada (estimado: +R${baggageFee})
+                </p>
+              )}
               {searchParams && searchParams.passengers > 1 && (
                 <p className="text-sm text-gray-600 mt-2">
                   Total para {searchParams.passengers} passageiro{searchParams.passengers > 1 ? 's' : ''}: 
                   <span className="font-semibold text-gray-800 ml-1">
-                    R$ {flight.price.grandTotal}
+                    R$ {(totalPrice * searchParams.passengers).toFixed(0)}
                   </span>
                 </p>
               )}
             </div>
-            <div className="text-right">
+            <div className="flex flex-col items-end gap-3">
               <p className="text-sm text-gray-600">{flight.airline || 'Companhia Aérea'}</p>
-              <span className={`inline-block mt-2 text-sm px-4 py-2 rounded-full font-semibold ${
+              <span className={`inline-block text-sm px-4 py-2 rounded-full font-semibold ${
                 (flight.stops ?? 0) === 0 
                   ? 'bg-green-100 text-green-700' 
                   : 'bg-yellow-100 text-yellow-700'
               }`}>
                 {(flight.stops ?? 0) === 0 ? '✈️ Voo Direto' : `${flight.stops ?? 0} parada${(flight.stops ?? 0) > 1 ? 's' : ''}`}
               </span>
+              <label className="flex items-center gap-2 cursor-pointer select-none bg-white px-3 py-1.5 rounded-lg border">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={includeBaggage}
+                    onChange={(e) => setIncludeBaggage(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-4 bg-gray-300 rounded-full peer-checked:bg-blue-600 transition-colors"></div>
+                  <div className="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
+                </div>
+                <span className="text-xs text-gray-600 flex items-center gap-1">
+                  <Luggage className="w-3 h-3" />
+                  {includeBaggage ? 'Com bagagem' : 'Sem bagagem'}
+                </span>
+              </label>
             </div>
           </div>
         </div>

@@ -81,6 +81,30 @@ export const POPULAR_AIRPORTS: Airport[] = [
     countryCode: "BR",
   },
   {
+    iataCode: "NVT",
+    name: "Aeroporto Internacional de Navegantes",
+    cityName: "Navegantes",
+    countryCode: "BR",
+  },
+  {
+    iataCode: "JOI",
+    name: "Aeroporto Lauro Carneiro de Loyola",
+    cityName: "Joinville",
+    countryCode: "BR",
+  },
+  {
+    iataCode: "XAP",
+    name: "Aeroporto de Chapecó",
+    cityName: "Chapecó",
+    countryCode: "BR",
+  },
+  {
+    iataCode: "PMW",
+    name: "Aeroporto Brigadeiro Lysias Rodrigues",
+    cityName: "Palmas",
+    countryCode: "BR",
+  },
+  {
     iataCode: "BEL",
     name: "Aeroporto Internacional de Belém",
     cityName: "Belém",
@@ -263,6 +287,24 @@ export const POPULAR_AIRPORTS: Airport[] = [
     countryCode: "IT",
   },
   {
+    iataCode: "CAG",
+    name: "Cagliari Elmas Airport",
+    cityName: "Cagliari",
+    countryCode: "IT",
+  },
+  {
+    iataCode: "OLB",
+    name: "Olbia Costa Smeralda Airport",
+    cityName: "Olbia",
+    countryCode: "IT",
+  },
+  {
+    iataCode: "AHO",
+    name: "Alghero Fertilia Airport",
+    cityName: "Alghero",
+    countryCode: "IT",
+  },
+  {
     iataCode: "MAD",
     name: "Madrid-Barajas Airport",
     cityName: "Madrid",
@@ -272,6 +314,12 @@ export const POPULAR_AIRPORTS: Airport[] = [
     iataCode: "BCN",
     name: "El Prat Airport",
     cityName: "Barcelona",
+    countryCode: "ES",
+  },
+  {
+    iataCode: "IBZ",
+    name: "Ibiza Airport",
+    cityName: "Ibiza",
     countryCode: "ES",
   },
   {
