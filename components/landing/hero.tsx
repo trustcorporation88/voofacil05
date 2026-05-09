@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'motion/react';
-import Image from 'next/image';
 
 interface HeroProps {
   onDiscover: () => void;
@@ -18,14 +17,16 @@ export function LandingHero({ onDiscover, onBook }: HeroProps) {
           loop
           muted
           playsInline
-          className="w-full h-full object-cover"
+          className="h-full w-full scale-105 object-cover saturate-150 contrast-110 brightness-[0.9] hue-rotate-[-8deg]"
         >
           <source
             src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_091828_e240eb17-6edc-4129-ad9d-98678e3fd238.mp4"
             type="video/mp4"
           />
         </video>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-brand-surface/90" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(125,211,252,0.38),transparent_44%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-sky-500/30 via-sky-400/10 to-brand-surface/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/15 to-brand-surface/88" />
       </div>
 
       {/* Hero content */}
