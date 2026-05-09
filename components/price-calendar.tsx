@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Calendar, Loader2, TrendingDown } from "lucide-react";
 
 interface PriceDay {
@@ -33,13 +33,7 @@ export function PriceCalendar({ origin, destination, departureDate, onSelectDate
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
   });
 
-  useEffect(() => {
-    if (showCalendar && prices.length === 0) {
-      loadPrices();
-    }
-  }, [showCalendar, viewMonth]);
-
-  const loadPrices = async () => {
+  const loadPrices = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/price-calendar", {
@@ -56,7 +50,13 @@ export function PriceCalendar({ origin, destination, departureDate, onSelectDate
     } finally {
       setLoading(false);
     }
-  };
+  }, [destination, origin, viewMonth]);
+
+  useEffect(() => {
+    if (showCalendar && prices.length === 0) {
+      loadPrices();
+    }
+  }, [showCalendar, prices.length, loadPrices]);
 
   const getPriceForDate = (dateStr: string) => {
     return prices.find((p) => p.date === dateStr);

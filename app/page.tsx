@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import type { SearchParams, Flight } from "@/lib/types";
+import type { SearchParams, Flight, SearchResponse, ProviderHealth } from "@/lib/types";
 import { useSession } from "next-auth/react";
 import { LandingNavbar } from "@/components/landing/navbar";
 import { LandingHero } from "@/components/landing/hero";
@@ -37,6 +37,8 @@ export default function Home() {
   const [showBaggage, setShowBaggage] = useState(false);
   const [selectedAirline, setSelectedAirline] = useState<string | null>(null);
   const [showAI, setShowAI] = useState(false);
+  const [providerHealth, setProviderHealth] = useState<Record<string, ProviderHealth>>({});
+  const [searchWarnings, setSearchWarnings] = useState<string[]>([]);
 
   const { data: session } = useSession();
 
@@ -61,6 +63,8 @@ export default function Home() {
     setSearchParams(params);
     setLoading(true);
     setFlights([]);
+    setProviderHealth({});
+    setSearchWarnings([]);
     setActiveFilter('all');
 
     try {
@@ -69,8 +73,10 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),
       });
-      const data = await response.json();
+      const data: SearchResponse = await response.json();
       setFlights(data.flights || []);
+      setProviderHealth(data.providers || {});
+      setSearchWarnings(data.warnings || []);
       try {
         fetch('/api/history', {
           method: 'POST',
@@ -144,6 +150,8 @@ export default function Home() {
           flights={flights}
           filteredFlights={filteredFlights}
           searchParams={searchParams}
+          providers={providerHealth}
+          warnings={searchWarnings}
           loading={loading}
           activeFilter={activeFilter}
           setActiveFilter={(f) => setActiveFilter(f as FilterType)}

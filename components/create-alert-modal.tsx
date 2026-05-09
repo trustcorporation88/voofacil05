@@ -65,7 +65,7 @@ export function CreateAlertModal({
         const data = await res.json();
         setError(data.error || "Erro ao criar alerta");
       }
-    } catch (err) {
+    } catch {
       setError("Erro ao criar alerta");
     } finally {
       setLoading(false);

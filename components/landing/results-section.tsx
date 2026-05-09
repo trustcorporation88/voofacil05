@@ -6,12 +6,15 @@ import {
   ExternalLink,
   Sparkles,
   Loader2,
-  X,
   Bell,
   Heart,
   Filter,
+  AlertTriangle,
+  CheckCircle2,
+  Clock3,
+  Ban,
 } from 'lucide-react';
-import type { Flight, SearchParams } from '@/lib/types';
+import type { Flight, SearchParams, ProviderHealth } from '@/lib/types';
 import { FlightDetailsModal } from '@/components/flight-details-modal';
 import { FlexDates } from '@/components/flex-dates';
 import { PriceCalendar } from '@/components/price-calendar';
@@ -21,6 +24,8 @@ interface ResultsSectionProps {
   flights: Flight[];
   filteredFlights: Flight[];
   searchParams: SearchParams;
+  providers?: Record<string, ProviderHealth>;
+  warnings?: string[];
   loading: boolean;
   activeFilter: string;
   setActiveFilter: (f: string) => void;
@@ -42,6 +47,8 @@ export function LandingResultsSection({
   flights,
   filteredFlights,
   searchParams,
+  providers,
+  warnings,
   loading,
   activeFilter,
   setActiveFilter,
@@ -86,6 +93,27 @@ export function LandingResultsSection({
   };
 
   const lowestPrice = Math.min(...flights.map((f) => parseFloat(f.price.total) || Infinity));
+
+  const providerLabels: Record<string, string> = {
+    googleFlights: 'Google Flights',
+    travelpayouts: 'Travelpayouts',
+    amadeus: 'Amadeus',
+    airScraper: 'Air Scraper',
+  };
+
+  const providerStatusStyle = {
+    ok: 'bg-green-50 text-green-800 border-green-200',
+    empty: 'bg-brand-surface text-brand-gray-600 border-brand-gray-300',
+    error: 'bg-red-50 text-red-700 border-red-200',
+    disabled: 'bg-amber-50 text-amber-700 border-amber-200',
+  } as const;
+
+  const providerStatusIcon = {
+    ok: <CheckCircle2 className="w-3 h-3" />,
+    empty: <Clock3 className="w-3 h-3" />,
+    error: <AlertTriangle className="w-3 h-3" />,
+    disabled: <Ban className="w-3 h-3" />,
+  } as const;
 
   return (
     <section id="results" className="py-16 px-6 max-w-5xl mx-auto">
@@ -133,6 +161,43 @@ export function LandingResultsSection({
           ⓘ Temos parceria com <strong>AVIASALES</strong>. Preços já incluem taxa de embarque e
           impostos. Valor final no checkout via parceiro.
         </p>
+
+        {/* Avisos técnicos só para admin/dev */}
+        {typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && warnings && warnings.length > 0 && (
+          <div className="mb-4 space-y-2">
+            {warnings.map((warning) => (
+              <div
+                key={warning}
+                className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+              >
+                <AlertTriangle className="w-4 h-4 mt-0.5" />
+                <span>{warning}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Status dos provedores só para admin/dev */}
+        {typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && providers && Object.keys(providers).length > 0 && (
+          <div className="mb-4 rounded-xl border border-brand-gray-300/50 bg-white p-3">
+            <p className="text-[10px] font-bold text-brand-gray-600 uppercase tracking-[0.2em] mb-2">
+              Status dos provedores
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(providers).map(([key, info]) => (
+                <span
+                  key={key}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${providerStatusStyle[info.status]}`}
+                  title={info.message || ''}
+                >
+                  {providerStatusIcon[info.status]}
+                  {providerLabels[key] || key}: {info.count}
+                  {typeof info.responseMs === 'number' ? ` · ${info.responseMs}ms` : ''}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Baggage toggle */}
         <div className="flex items-center gap-3 mb-4">

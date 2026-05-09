@@ -164,9 +164,9 @@ export function LandingSearchSection({ onSearch, loading, initialParams }: Searc
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-4 bg-brand-charcoal text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-brand-primary transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full py-3 bg-brand-charcoal text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-brand-primary transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          <Search className="w-4 h-4" />
+          <Search className="w-5 h-5" />
           {loading ? 'Buscando voos...' : 'Buscar Voos'}
         </button>
       </motion.form>

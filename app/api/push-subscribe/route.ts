@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
+import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth.config";
 import { PrismaClient } from "@prisma/client";
 
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {

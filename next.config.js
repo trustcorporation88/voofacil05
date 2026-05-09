@@ -13,6 +13,13 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  webpack: (config, { dev }) => {
+    // Prevent intermittent Windows dev cache corruption (.next/server/vendor-chunks missing)
+    if (dev) {
+      config.cache = false;
+    }
+    return config;
+  },
   images: { unoptimized: true },
   async headers() {
     return [

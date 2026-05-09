@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
+import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth.config";
 import { PrismaClient } from "@prisma/client";
 
@@ -42,7 +42,7 @@ export async function GET() {
     });
 
     return NextResponse.json({ accepted: !!acceptance, acceptance });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ accepted: false });
   }
 }

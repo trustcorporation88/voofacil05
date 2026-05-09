@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { CalendarDays, TrendingDown, Loader2 } from "lucide-react";
 
 interface FlexDatesProps {
@@ -10,7 +10,10 @@ interface FlexDatesProps {
   onSelectDate: (date: string) => void;
 }
 
-const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+interface CalendarPrice {
+  date: string;
+  price: number;
+}
 
 export function FlexDates({ origin, destination, departureDate, onSelectDate }: FlexDatesProps) {
   const [prices, setPrices] = useState<Record<string, number>>({});
@@ -29,11 +32,7 @@ export function FlexDates({ origin, destination, departureDate, onSelectDate }: 
     return dates;
   }, [selectedDate]);
 
-  useEffect(() => {
-    loadPrices();
-  }, [departureDate, origin, destination]);
-
-  const loadPrices = async () => {
+  const loadPrices = useCallback(async () => {
     setLoading(true);
     try {
       const month = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-01`;
@@ -45,7 +44,7 @@ export function FlexDates({ origin, destination, departureDate, onSelectDate }: 
       if (res.ok) {
         const data = await res.json();
         const map: Record<string, number> = {};
-        (data.prices || []).forEach((p: any) => {
+        (data.prices as CalendarPrice[] || []).forEach((p) => {
           if (p.price > 0) map[p.date] = p.price;
         });
         setPrices(map);
@@ -53,7 +52,11 @@ export function FlexDates({ origin, destination, departureDate, onSelectDate }: 
     } catch {} finally {
       setLoading(false);
     }
-  };
+  }, [destination, origin, selectedDate]);
+
+  useEffect(() => {
+    loadPrices();
+  }, [loadPrices]);
 
   const minPrice = Math.min(...Object.values(prices).filter(p => p > 0), Infinity);
 

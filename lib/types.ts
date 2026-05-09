@@ -32,6 +32,24 @@ export interface Flight {
   travelerPricings?: any[];
 }
 
+export type ProviderState = "ok" | "empty" | "error" | "disabled";
+
+export interface ProviderHealth {
+  status: ProviderState;
+  count: number;
+  responseMs?: number;
+  message?: string;
+}
+
+export interface SearchResponse {
+  flights: Flight[];
+  provider: string;
+  count: number;
+  message?: string;
+  warnings?: string[];
+  providers?: Record<string, ProviderHealth>;
+}
+
 export interface Itinerary {
   duration: string;
   segments: Segment[];

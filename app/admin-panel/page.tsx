@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Shield, Users, Bell, Heart, Search, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Shield, Users, Bell, Heart, Search, CheckCircle, Loader2 } from "lucide-react";
 
 export default function AdminPage() {
   const [key, setKey] = useState("");

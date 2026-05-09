@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'motion/react';
+import Image from 'next/image';
 import { Compass, ArrowRight } from 'lucide-react';
 
 export function FeaturedSection() {
@@ -14,10 +15,13 @@ export function FeaturedSection() {
           viewport={{ once: true }}
           className="md:col-span-7 relative group overflow-hidden rounded-xl h-[500px]"
         >
-          <img
+          <Image
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuAj_meOkOrPXghBIRluQ8lbKfpRQA-F2zt4XEWyUwij5i__TsW9oM94IFMCk1oW2jE9JXCQH2LovEy5HbqhGoTlkQV3SGHCQBZqFQBdmWfVCK2FuMNqO2Weh-KQtmQ5TySyAnoHq0vPpqHNXzuRMI6BNbG7siShaCNDXK4Ku_O9cKQCM4tsgi-kv8t8BHcD29G52IiftHegP-gYuF-GoobvIUS6i3baW7j-APaVPwAtbFHNcrWnyiJhQb5EEBuO18PPivIFMqVUYRs"
             alt="Luxury Private Jet"
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+            fill
+            sizes="(max-width: 768px) 100vw, 58vw"
+            unoptimized
           />
           <div className="absolute inset-0 bg-gradient-to-t from-brand-charcoal/90 to-transparent flex flex-col justify-end p-12">
             <span className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] mb-3">

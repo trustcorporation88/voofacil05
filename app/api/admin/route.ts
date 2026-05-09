@@ -31,7 +31,7 @@ export async function GET(request: Request) {
       users,
       stats: { totalUsers: users.length, alerts, favorites, totalSearches },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Erro" }, { status: 500 });
   }
 }

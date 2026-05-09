@@ -63,7 +63,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
         onClose();
         window.location.reload();
       }
-    } catch (err) {
+    } catch {
       setError("Erro ao criar conta");
     } finally {
       setLoading(false);
@@ -71,7 +71,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   };
 
   const handleGoogleSignup = () => {
-    signIn("google", { callbackUrl: "/" });
+    signIn("google", { callbackUrl: `${window.location.origin}/` });
   };
 
   return (

@@ -10,6 +10,17 @@ const AMADEUS_API_SECRET = process.env.AMADEUS_API_SECRET;
 const SERPAPI_KEY = process.env.SERPAPI_KEY;
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 
+// If Skyscanner returns 403 (subscription issue), skip it temporarily to reduce latency.
+let skyscannerDisabledUntil = 0;
+
+export async function getSkyscannerProviderStatus() {
+  const remainingMs = Math.max(0, skyscannerDisabledUntil - Date.now());
+  return {
+    temporarilyDisabled: remainingMs > 0,
+    retryInSeconds: Math.ceil(remainingMs / 1000),
+  };
+}
+
 // Debug: Log environment variables (apenas primeiros/últimos caracteres por segurança)
 console.log("[ENV] Variables loaded:", {
   SERPAPI_KEY: SERPAPI_KEY ? `${SERPAPI_KEY.slice(0, 10)}...${SERPAPI_KEY.slice(-10)}` : "NOT SET",
@@ -94,7 +105,7 @@ export async function searchWithSerpAPI(
       console.log(`[SerpAPI] Found ${allFlights.length} flights`);
 
       return allFlights.slice(0, 20).map((flight: any, idx: number) => {
-        let priceValue = typeof flight.price === 'number' ? flight.price : parseFloat(flight.price) || 0;
+        const priceValue = typeof flight.price === 'number' ? flight.price : parseFloat(flight.price) || 0;
 
         const allSegments = flight.flights || [];
         const isRoundTrip = !!(params.returnDate);
@@ -283,6 +294,12 @@ export async function searchWithAmadeus(
 // ============ SKYSCANNER (via RapidAPI) ============
 export async function searchWithSkyscanner(params: SearchParams): Promise<Flight[]> {
   console.log("[Skyscanner] Starting search...");
+
+  const skyStatus = await getSkyscannerProviderStatus();
+  if (skyStatus.temporarilyDisabled) {
+    console.log(`[Skyscanner] Temporarily disabled (${skyStatus.retryInSeconds}s left)`);
+    return [];
+  }
   
   if (!RAPIDAPI_KEY) {
     console.log("[Skyscanner] No RapidAPI key found");
@@ -323,6 +340,11 @@ export async function searchWithSkyscanner(params: SearchParams): Promise<Flight
     if (!res.ok) {
       const errorData = await res.text();
       console.log(`[Skyscanner] Error response:`, errorData);
+
+      if (res.status === 403) {
+        skyscannerDisabledUntil = Date.now() + 30 * 60 * 1000;
+        console.log("[Skyscanner] Disabled for 30 minutes due to 403 subscription error");
+      }
       return [];
     }
     
@@ -386,6 +408,104 @@ export async function searchWithSkyscanner(params: SearchParams): Promise<Flight
     });
   } catch (error) {
     console.error("[Skyscanner] Error:", error);
+  }
+
+  return [];
+}
+
+// ============ AIR SCRAPER (RapidAPI) ============
+export async function searchWithAirScraper(
+  params: SearchParams,
+): Promise<Flight[]> {
+  console.log("[AirScraper] Starting search...");
+  
+  if (!RAPIDAPI_KEY) {
+    console.log("[AirScraper] No RapidAPI key found");
+    return [];
+  }
+
+  try {
+    const affiliateUrl = await getTravelpayoutsLink(params);
+
+    const url = new URL("https://sky-scrapper.p.rapidapi.com/api/v1/searchFlights");
+    url.searchParams.append("fromEntityId", params.origin);
+    url.searchParams.append("toEntityId", params.destination);
+    url.searchParams.append("departDate", params.departureDate);
+    if (params.returnDate) {
+      url.searchParams.append("returnDate", params.returnDate);
+    }
+    url.searchParams.append("adults", params.passengers.toString());
+    url.searchParams.append("sortBy", "best");
+    url.searchParams.append("limit", "50");
+
+    const res = await fetch(url.toString(), {
+      headers: {
+        "x-rapidapi-key": RAPIDAPI_KEY,
+        "x-rapidapi-host": "sky-scrapper.p.rapidapi.com",
+      },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    console.log(`[AirScraper] Response status: ${res.status}`);
+
+    if (!res.ok) {
+      console.log(`[AirScraper] Error: ${res.statusText}`);
+      return [];
+    }
+
+    const data = await res.json();
+    console.log(`[AirScraper] Response data:`, {
+      data_length: data.data?.length || 0,
+      status: data.status,
+    });
+
+    const flights = data.data || [];
+    console.log(`[AirScraper] Found ${flights.length} flights`);
+
+    return flights.slice(0, 50).map((flight: any, idx: number) => {
+      const priceValue = parseFloat(flight.price?.raw || flight.price?.formatted || 0);
+      const legs = flight.legs || [];
+
+      if (idx === 0) {
+        console.log("[AirScraper] Sample flight:", {
+          price: flight.price,
+          legs_count: legs.length,
+        });
+      }
+
+      return {
+        id: `airscraper-${idx}-${priceValue}`,
+        price: {
+          total: priceValue > 0 ? priceValue.toFixed(2) : "Consultar",
+          currency: "BRL",
+          grandTotal: priceValue > 0 ? (priceValue * params.passengers).toFixed(2) : "Consultar",
+        },
+        itineraries: legs.map((leg: any) => ({
+          duration: `PT${leg.durationInMinutes || 120}M`,
+          segments: (leg.segments || []).map((seg: any) => ({
+            departure: {
+              iataCode: seg.origin?.displayCode || params.origin,
+              at: seg.departure || new Date().toISOString(),
+            },
+            arrival: {
+              iataCode: seg.destination?.displayCode || params.destination,
+              at: seg.arrival || new Date().toISOString(),
+            },
+            carrierCode: seg.marketingCarrier?.code || "UNKNOWN",
+            number: seg.flightNumber || "0000",
+          })),
+        })),
+        oneWay: !params.returnDate,
+        airline: legs[0]?.carriers?.marketing?.[0]?.name || "UNKNOWN",
+        airlineLogo: legs[0]?.carriers?.marketing?.[0]?.logoUrl || "",
+        flightNumber: legs[0]?.segments?.[0]?.flightNumber || "",
+        amenities: [],
+        stops: legs[0]?.stopCount || 0,
+        purchaseUrl: affiliateUrl,
+      };
+    });
+  } catch (error) {
+    console.error("[AirScraper] Error:", error);
   }
 
   return [];

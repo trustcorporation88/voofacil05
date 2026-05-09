@@ -36,7 +36,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
         onClose();
         window.location.reload();
       }
-    } catch (err) {
+    } catch {
       setError("Erro ao fazer login");
     } finally {
       setLoading(false);
@@ -44,7 +44,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
   };
 
   const handleGoogleLogin = () => {
-    signIn("google", { callbackUrl: "/" });
+    signIn("google", { callbackUrl: `${window.location.origin}/` });
   };
 
   return (

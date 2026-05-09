@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Bell, BellOff, Loader2 } from "lucide-react";
 
 const urlB64ToUint8Array = (base64String: string) => {
@@ -15,11 +15,7 @@ export function PushNotificationButton() {
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkStatus();
-  }, []);
-
-  const checkStatus = async () => {
+  const checkStatus = useCallback(async () => {
     setLoading(true);
     try {
       if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
@@ -41,7 +37,11 @@ export function PushNotificationButton() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    checkStatus();
+  }, [checkStatus]);
 
   const registerSW = async () => {
     try {
@@ -78,8 +78,8 @@ export function PushNotificationButton() {
 
       await saveSubscription(sub);
       setSubscribed(true);
-    } catch (err: any) {
-      if (err.name === "NotAllowedError") {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "NotAllowedError") {
         alert("Permissão de notificação negada. Habilite nas configurações do navegador.");
       }
       console.error("Subscribe error:", err);
