@@ -13,6 +13,9 @@ import {
   LogOut,
   Clock,
   Activity,
+  Monitor,
+  MousePointerClick,
+  BarChart3,
 } from "lucide-react";
 
 export default function AdminPage() {
@@ -31,15 +34,23 @@ export default function AdminPage() {
     return new Date(value).toLocaleString("pt-BR");
   };
 
+  const formatDuration = (seconds?: number) => {
+    if (!seconds || seconds <= 0) return "0s";
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+
+    if (h > 0) return `${h}h ${m}min ${s}s`;
+    if (m > 0) return `${m}min ${s}s`;
+    return `${s}s`;
+  };
+
   const fetchAdminData = async () => {
     setLoadingData(true);
     setError("");
 
     try {
-      const res = await fetch("/api/admin", {
-        cache: "no-store",
-      });
-
+      const res = await fetch("/api/admin", { cache: "no-store" });
       const json = await res.json();
 
       if (!res.ok) {
@@ -124,9 +135,7 @@ export default function AdminPage() {
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
           />
 
-          {error && (
-            <p className="text-sm text-red-600 mb-4">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
 
           <button
             onClick={handleLogin}
@@ -174,9 +183,7 @@ export default function AdminPage() {
           </h1>
 
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500">
-              {session?.user?.email}
-            </span>
+            <span className="text-sm text-gray-500">{session?.user?.email}</span>
             <button
               onClick={() => signOut()}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold"
@@ -194,14 +201,123 @@ export default function AdminPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
           <Stat icon={Users} label="Usuários" value={stats.totalUsers || 0} color="text-blue-600" />
           <Stat icon={Bell} label="Alertas" value={stats.alerts || 0} color="text-yellow-600" />
-          <Stat icon={Activity} label="Alertas ativos" value={stats.activeAlerts || 0} color="text-emerald-600" />
           <Stat icon={Heart} label="Favoritos" value={stats.favorites || 0} color="text-red-600" />
           <Stat icon={Search} label="Buscas" value={stats.totalSearches || 0} color="text-green-600" />
-          <Stat icon={Clock} label="Buscas 24h" value={stats.searches24h || 0} color="text-purple-600" />
-          <Stat icon={Clock} label="Buscas 7d" value={stats.searches7d || 0} color="text-indigo-600" />
+          <Stat icon={Activity} label="Buscas 24h" value={stats.searches24h || 0} color="text-purple-600" />
+          <Stat icon={Activity} label="Buscas 7d" value={stats.searches7d || 0} color="text-indigo-600" />
+          <Stat icon={Monitor} label="Sessões total" value={stats.totalSessions || 0} color="text-slate-700" />
+          <Stat icon={Monitor} label="Sessões hoje" value={stats.sessionsToday || 0} color="text-cyan-700" />
+          <Stat icon={Clock} label="Ativos 15 min" value={stats.activeSessions15m || 0} color="text-emerald-600" />
+          <Stat icon={Clock} label="Ativos 60 min" value={stats.activeSessions60m || 0} color="text-emerald-800" />
+          <Stat icon={MousePointerClick} label="Pageviews hoje" value={stats.pageViewsToday || 0} color="text-orange-600" />
+          <Stat icon={BarChart3} label="Pág./sessão" value={stats.avgPagesPerSession || 0} color="text-pink-600" />
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-5">
+            <h2 className="text-lg font-bold mb-3">Tempo médio por sessão</h2>
+            <p className="text-3xl font-black text-blue-700">
+              {formatDuration(stats.avgSessionSeconds || 0)}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Média calculada com base nas sessões registradas hoje.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-5">
+            <h2 className="text-lg font-bold mb-3">Leitura rápida</h2>
+            <ul className="text-sm text-gray-600 space-y-2">
+              <li>• Sessões ativas nos últimos 15 minutos: <strong>{stats.activeSessions15m || 0}</strong></li>
+              <li>• Sessões ativas nos últimos 60 minutos: <strong>{stats.activeSessions60m || 0}</strong></li>
+              <li>• Pageviews hoje: <strong>{stats.pageViewsToday || 0}</strong></li>
+              <li>• Páginas por sessão hoje: <strong>{stats.avgPagesPerSession || 0}</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow overflow-hidden mb-8">
+          <h2 className="text-lg font-bold p-4 border-b flex items-center gap-2">
+            <Monitor className="w-5 h-5 text-cyan-700" />
+            Sessões recentes ({data?.recentSessions?.length || 0})
+          </h2>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left p-3">Usuário</th>
+                  <th className="text-left p-3">Entrada</th>
+                  <th className="text-left p-3">Saída atual</th>
+                  <th className="text-left p-3">Início</th>
+                  <th className="text-left p-3">Última atividade</th>
+                  <th className="text-left p-3">Duração</th>
+                  <th className="text-left p-3">Páginas</th>
+                  <th className="text-left p-3">Dispositivo</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {data?.recentSessions?.map((s: any) => (
+                  <tr key={s.id} className="border-t hover:bg-gray-50">
+                    <td className="p-3">{s.user?.email || "Visitante"}</td>
+                    <td className="p-3 font-medium">{s.entryPath || "-"}</td>
+                    <td className="p-3">{s.exitPath || "-"}</td>
+                    <td className="p-3">{formatDate(s.startedAt)}</td>
+                    <td className="p-3">{formatDate(s.lastSeenAt)}</td>
+                    <td className="p-3">{formatDuration(s.computedDurationSeconds)}</td>
+                    <td className="p-3">{s._count?.pageViews || 0}</td>
+                    <td className="p-3 uppercase">{s.deviceType || "-"}</td>
+                  </tr>
+                ))}
+
+                {(!data?.recentSessions || data.recentSessions.length === 0) && (
+                  <tr>
+                    <td colSpan={8} className="p-6 text-center text-gray-400">
+                      Nenhuma sessão registrada ainda
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow overflow-hidden mb-8">
+          <h2 className="text-lg font-bold p-4 border-b flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-pink-600" />
+            Páginas mais vistas hoje ({data?.topPages?.length || 0})
+          </h2>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left p-3">Página</th>
+                  <th className="text-left p-3">Visualizações</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {data?.topPages?.map((p: any, index: number) => (
+                  <tr key={`${p.path}-${index}`} className="border-t hover:bg-gray-50">
+                    <td className="p-3 font-medium">{p.path}</td>
+                    <td className="p-3">{p.views}</td>
+                  </tr>
+                ))}
+
+                {(!data?.topPages || data.topPages.length === 0) && (
+                  <tr>
+                    <td colSpan={2} className="p-6 text-center text-gray-400">
+                      Nenhuma página registrada ainda
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden mb-8">
@@ -221,7 +337,8 @@ export default function AdminPage() {
                   <th className="text-left p-3">Buscas</th>
                   <th className="text-left p-3">Favoritos</th>
                   <th className="text-left p-3">Alertas</th>
-                  <th className="text-left p-3">Aceite</th>
+                  <th className="text-left p-3">Sessões</th>
+                  <th className="text-left p-3">Pageviews</th>
                 </tr>
               </thead>
 
@@ -246,17 +363,14 @@ export default function AdminPage() {
                     <td className="p-3">{u._count?.searchHistory || 0}</td>
                     <td className="p-3">{u._count?.savedSearches || 0}</td>
                     <td className="p-3">{u._count?.priceAlerts || 0}</td>
-                    <td className="p-3">
-                      {u.disclaimerAcceptance
-                        ? formatDate(u.disclaimerAcceptance.acceptedAt)
-                        : "-"}
-                    </td>
+                    <td className="p-3">{u._count?.visitSessions || 0}</td>
+                    <td className="p-3">{u._count?.pageViews || 0}</td>
                   </tr>
                 ))}
 
                 {(!data?.users || data.users.length === 0) && (
                   <tr>
-                    <td colSpan={8} className="p-6 text-center text-gray-400">
+                    <td colSpan={9} className="p-6 text-center text-gray-400">
                       Nenhum usuário registrado
                     </td>
                   </tr>
@@ -289,7 +403,9 @@ export default function AdminPage() {
                 {data?.recentSearches?.map((s: any) => (
                   <tr key={s.id} className="border-t hover:bg-gray-50">
                     <td className="p-3">{s.user?.email || "-"}</td>
-                    <td className="p-3 font-semibold">{s.origin} → {s.destination}</td>
+                    <td className="p-3 font-semibold">
+                      {s.origin} → {s.destination}
+                    </td>
                     <td className="p-3">{s.departureDate}</td>
                     <td className="p-3">{s.returnDate || "-"}</td>
                     <td className="p-3">{s.passengers}</td>
@@ -361,7 +477,7 @@ function Stat({
 }: {
   icon: any;
   label: string;
-  value: number;
+  value: number | string;
   color: string;
 }) {
   return (

@@ -59,6 +59,8 @@ model User {
   notifications Notification[]
   pushSubscription PushSubscription?
   disclaimerAcceptance DisclaimerAcceptance?
+  visitSessions  VisitSession[]
+  pageViews      PageView[]
 }
 
 model VerificationToken {
@@ -160,4 +162,48 @@ model Notification {
 
   @@index([userId, read])
   @@index([userId, createdAt])
+}
+
+model VisitSession {
+  id              String     @id @default(cuid())
+  sessionKey      String     @unique
+  userId          String?
+  startedAt       DateTime   @default(now())
+  lastSeenAt      DateTime   @default(now())
+  endedAt         DateTime?
+  durationSeconds Int        @default(0)
+  entryPath       String?
+  exitPath        String?
+  landingPage     String?
+  referrer        String?
+  ipHash          String?
+  userAgent       String?
+  deviceType      String?
+  createdAt       DateTime   @default(now())
+
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  pageViews PageView[]
+
+  @@index([userId])
+  @@index([startedAt])
+  @@index([lastSeenAt])
+  @@index([createdAt])
+}
+
+model PageView {
+  id         String       @id @default(cuid())
+  sessionId  String
+  userId     String?
+  path       String
+  title      String?
+  referrer   String?
+  visitedAt  DateTime     @default(now())
+
+  session VisitSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId])
+  @@index([userId])
+  @@index([visitedAt])
+  @@index([path])
 }

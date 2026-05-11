@@ -1,5 +1,6 @@
 'use client';
 
+import { PriceCurrencyNotice } from "@/components/price-currency-notice";
 import { motion } from 'motion/react';
 import {
   Plane,
@@ -163,9 +164,16 @@ export function LandingResultsSection({
         </p>
 
         {/* Avisos técnicos só para admin/dev */}
-        {typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && warnings && warnings.length > 0 && (
+        <div className="mb-4">
+</div>
+
+        <div className="mb-4">
+          <PriceCurrencyNotice />
+        </div>
+
+        {process.env.NEXT_PUBLIC_PROVIDER_DEBUG === "true" && warnings && warnings.length > 0 && (
           <div className="mb-4 space-y-2">
-            {warnings.map((warning) => (
+{warnings.map((warning) => (
               <div
                 key={warning}
                 className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
@@ -178,7 +186,7 @@ export function LandingResultsSection({
         )}
 
         {/* Status dos provedores só para admin/dev */}
-        {typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && providers && Object.keys(providers).length > 0 && (
+        {process.env.NEXT_PUBLIC_PROVIDER_DEBUG === "true" && providers && Object.keys(providers).length > 0 && (
           <div className="mb-4 rounded-xl border border-brand-gray-300/50 bg-white p-3">
             <p className="text-[10px] font-bold text-brand-gray-600 uppercase tracking-[0.2em] mb-2">
               Status dos provedores
@@ -293,7 +301,7 @@ export function LandingResultsSection({
 
       {/* Flight cards */}
       <div className="space-y-3 mt-4">
-        {filteredFlights.map((flight, index) => {
+{filteredFlights.map((flight, index) => {
           const price = parseFloat(flight.price.total) || 0;
           const displayPrice = showBaggage ? price + (flight.oneWay ? 100 : 200) : price;
           const isBest = price === lowestPrice;
@@ -475,5 +483,9 @@ export function LandingResultsSection({
     </section>
   );
 }
+
+
+
+
 
 

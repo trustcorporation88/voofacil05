@@ -14,6 +14,11 @@ function getAdminEmails() {
     .filter(Boolean);
 }
 
+function formatDurationSeconds(startedAt: Date, lastSeenAt: Date, durationSeconds: number) {
+  if (durationSeconds > 0) return durationSeconds;
+  return Math.max(0, Math.floor((new Date(lastSeenAt).getTime() - new Date(startedAt).getTime()) / 1000));
+}
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -24,8 +29,13 @@ export async function GET() {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
+    const now = new Date();
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const since15m = new Date(Date.now() - 15 * 60 * 1000);
+    const since60m = new Date(Date.now() - 60 * 60 * 1000);
+    const startToday = new Date(now);
+    startToday.setHours(0, 0, 0, 0);
 
     const [
       users,
@@ -38,6 +48,14 @@ export async function GET() {
       searches7d,
       recentSearches,
       notifications,
+      totalSessions,
+      sessionsToday,
+      activeSessions15m,
+      activeSessions60m,
+      pageViewsToday,
+      avgDurationAgg,
+      topPagesRaw,
+      recentSessionsRaw,
     ] = await Promise.all([
       prisma.user.findMany({
         select: {
@@ -68,6 +86,8 @@ export async function GET() {
               searchHistory: true,
               priceAlerts: true,
               notifications: true,
+              visitSessions: true,
+              pageViews: true,
             },
           },
         },
@@ -122,6 +142,77 @@ export async function GET() {
       }),
 
       prisma.notification.count(),
+
+      prisma.visitSession.count(),
+
+      prisma.visitSession.count({
+        where: {
+          startedAt: { gte: startToday },
+        },
+      }),
+
+      prisma.visitSession.count({
+        where: {
+          lastSeenAt: { gte: since15m },
+        },
+      }),
+
+      prisma.visitSession.count({
+        where: {
+          lastSeenAt: { gte: since60m },
+        },
+      }),
+
+      prisma.pageView.count({
+        where: {
+          visitedAt: { gte: startToday },
+        },
+      }),
+
+      prisma.visitSession.aggregate({
+        _avg: {
+          durationSeconds: true,
+        },
+        where: {
+          startedAt: { gte: startToday },
+          durationSeconds: { gt: 0 },
+        },
+      }),
+
+      prisma.pageView.groupBy({
+        by: ["path"],
+        _count: {
+          path: true,
+        },
+        where: {
+          visitedAt: { gte: startToday },
+        },
+        orderBy: {
+          _count: {
+            path: "desc",
+          },
+        },
+        take: 10,
+      }),
+
+      prisma.visitSession.findMany({
+        orderBy: { startedAt: "desc" },
+        take: 50,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          _count: {
+            select: {
+              pageViews: true,
+            },
+          },
+        },
+      }),
     ]);
 
     const usersWithLastAccess = users.map((user) => ({
@@ -129,6 +220,18 @@ export async function GET() {
       lastSearch: user.searchHistory[0] || null,
       searchHistory: undefined,
     }));
+
+    const recentSessions = recentSessionsRaw.map((session) => ({
+      ...session,
+      computedDurationSeconds: formatDurationSeconds(
+        session.startedAt,
+        session.lastSeenAt,
+        session.durationSeconds
+      ),
+    }));
+
+    const avgPagesPerSession =
+      sessionsToday > 0 ? Number((pageViewsToday / sessionsToday).toFixed(2)) : 0;
 
     return NextResponse.json({
       stats: {
@@ -140,10 +243,22 @@ export async function GET() {
         searches24h,
         searches7d,
         notifications,
+        totalSessions,
+        sessionsToday,
+        activeSessions15m,
+        activeSessions60m,
+        pageViewsToday,
+        avgSessionSeconds: Math.round(avgDurationAgg._avg.durationSeconds || 0),
+        avgPagesPerSession,
       },
       users: usersWithLastAccess,
       acceptances,
       recentSearches,
+      recentSessions,
+      topPages: topPagesRaw.map((item) => ({
+        path: item.path,
+        views: item._count.path,
+      })),
     });
   } catch (error) {
     console.error("Erro no admin:", error);
