@@ -114,3 +114,5 @@ export function getRegionNameById(regionId: string): string {
   const region = REGIONS.find(r => r.id === regionId);
   return region?.name || '';
 }
+
+

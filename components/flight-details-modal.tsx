@@ -229,3 +229,5 @@ export function FlightDetailsModal({ flight, searchParams, onClose }: FlightDeta
     </div>
   );
 }
+
+

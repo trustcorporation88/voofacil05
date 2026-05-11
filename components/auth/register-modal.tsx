@@ -194,3 +194,5 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     </div>
   );
 }
+
+

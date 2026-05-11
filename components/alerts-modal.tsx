@@ -175,3 +175,5 @@ export default function AlertsModal({ isOpen, onClose }: AlertsModalProps) {
     </div>
   );
 }
+
+

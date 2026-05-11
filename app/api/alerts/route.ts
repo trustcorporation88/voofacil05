@@ -121,3 +121,5 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Erro ao remover alerta" }, { status: 500 });
   }
 }
+
+

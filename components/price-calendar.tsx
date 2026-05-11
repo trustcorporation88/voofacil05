@@ -189,3 +189,5 @@ export function PriceCalendar({ origin, destination, departureDate, onSelectDate
     </div>
   );
 }
+
+

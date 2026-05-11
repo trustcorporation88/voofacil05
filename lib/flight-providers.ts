@@ -22,13 +22,6 @@ export async function getSkyscannerProviderStatus() {
 }
 
 // Debug: Log environment variables (apenas primeiros/últimos caracteres por segurança)
-console.log("[ENV] Variables loaded:", {
-  SERPAPI_KEY: SERPAPI_KEY ? `${SERPAPI_KEY.slice(0, 10)}...${SERPAPI_KEY.slice(-10)}` : "NOT SET",
-  AMADEUS_API_KEY: AMADEUS_API_KEY ? `${AMADEUS_API_KEY.slice(0, 10)}...` : "NOT SET",
-  AMADEUS_API_SECRET: AMADEUS_API_SECRET ? `${AMADEUS_API_SECRET.slice(0, 10)}...` : "NOT SET",
-  RAPIDAPI_KEY: RAPIDAPI_KEY ? `${RAPIDAPI_KEY.slice(0, 10)}...${RAPIDAPI_KEY.slice(-10)}` : "NOT SET",
-});
-
 // Token Amadeus
 let amadeusToken: string | null = null;
 let tokenExpiresAt = 0;
@@ -510,3 +503,6 @@ export async function searchWithAirScraper(
 
   return [];
 }
+
+
+

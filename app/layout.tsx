@@ -1,28 +1,73 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { SessionProvider } from "@/components/session-provider";
+import { PwaBootstrap } from "@/components/pwa-bootstrap";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
 });
 
+const siteUrl = "https://www.vooscortex.com.br";
+
 export const metadata: Metadata = {
-  title: "VooFácil — Todas as Cias em Um Só Lugar",
-  description: "Compare preços de voos em tempo real com LATAM, Azul, Gol e mais. Receba alertas de preço grátis por e-mail quando a passagem cair.",
-  keywords: "passagem aérea barata, voos baratos, comparar voos, alerta de preço, LATAM, Azul, Gol",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Voos Cortex | Compare Passagens Aéreas em Segundos",
+    template: "%s | Voos Cortex",
+  },
+  description:
+    "Compare passagens aéreas, acompanhe alertas de preço e encontre opções de voos nacionais e internacionais com mais rapidez e clareza.",
+  manifest: "/manifest.webmanifest",
+  applicationName: "Voos Cortex",
+  keywords: [
+    "passagem aérea",
+    "passagens aéreas baratas",
+    "voos baratos",
+    "comparar voos",
+    "alerta de preço",
+    "Voos Cortex",
+    "voos nacionais",
+    "voos internacionais",
+  ],
+  authors: [{ name: "Voos Cortex" }],
+  creator: "Voos Cortex",
+  publisher: "Voos Cortex",
   openGraph: {
-    title: "VooFácil — Todas as Cias em Um Só Lugar",
-    description: "Compare preços de voos em tempo real. Alerta de preço grátis por e-mail.",
-    url: "https://www.vooscortex.com.br",
-    siteName: "VooFácil",
+    title: "Voos Cortex | Compare Passagens Aéreas em Segundos",
+    description:
+      "Busque, compare e acompanhe preços de passagens aéreas com uma experiência simples e otimizada para celular.",
+    url: siteUrl,
+    siteName: "Voos Cortex",
     locale: "pt_BR",
     type: "website",
   },
-  robots: { index: true, follow: true },
-  alternates: { canonical: "https://www.vooscortex.com.br" },
-  icons: { icon: "/favicon.svg" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  alternates: {
+    canonical: siteUrl,
+  },
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/icons/icon-192.png",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0f172a",
 };
 
 export default function RootLayout({
@@ -32,17 +77,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <head>
-        {/* Travelpayouts Script */}
-        <script
-          async
-          src="//www.travelpayouts.com/weedle/widget.js?marker=720173"
-          charSet="utf-8"
-        />
-      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
+        <PwaBootstrap />
         <SessionProvider>{children}</SessionProvider>
+        <Script
+          src="https://www.travelpayouts.com/weedle/widget.js?marker=720173"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
 }
+
+

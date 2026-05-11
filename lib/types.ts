@@ -125,3 +125,5 @@ export interface SearchHistoryItem {
   resultsCount: number;
   lowestPrice?: string;
 }
+
+

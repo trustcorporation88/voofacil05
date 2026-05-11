@@ -8,7 +8,7 @@ const CASES = [
     icon: Zap,
     stat: '4h',
     label: 'Disponibilidade',
-    desc: 'Tempo médio da solicitação à decolagem. Frota sempre em prontidão.',
+    desc: 'Tempo médio para iniciar uma busca e comparar opções disponíveis.',
     color: 'bg-amber-50 text-amber-700',
   },
   {
@@ -50,7 +50,7 @@ const CASES = [
     icon: Users,
     stat: '1–19',
     label: 'Passageiros',
-    desc: 'Frota diversificada — de turbohélices a jatos wide-body para grandes grupos.',
+    desc: 'Cobertura de rotas nacionais e internacionais, conforme disponibilidade dos provedores.',
     color: 'bg-indigo-50 text-indigo-700',
   },
   {
@@ -78,7 +78,7 @@ export function CasesSection() {
           Benchmarks da Indústria
         </h2>
         <p className="text-brand-gray-600 mt-4 max-w-xl mx-auto text-base">
-          Números verificados pelos maiores operadores do setor de aviação executiva mundial.
+          Indicadores internos usados para acompanhar qualidade, velocidade e clareza da experiência.
         </p>
       </motion.div>
 
@@ -108,3 +108,6 @@ export function CasesSection() {
     </section>
   );
 }
+
+
+

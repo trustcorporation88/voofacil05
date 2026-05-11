@@ -79,7 +79,7 @@ export function FeaturedSection() {
             </div>
             <h4 className="text-2xl font-bold text-brand-charcoal mb-4">Eficiência como Padrão</h4>
             <p className="text-brand-gray-600 text-sm leading-relaxed">
-              Nossa frota mantém 99,8% de confiabilidade de despacho mecânico, garantindo que sua
+              Nossa plataforma mantém 99,8% de confiabilidade de despacho mecânico, garantindo que sua
               agenda nunca seja comprometida.
             </p>
           </div>
@@ -88,3 +88,6 @@ export function FeaturedSection() {
     </section>
   );
 }
+
+
+

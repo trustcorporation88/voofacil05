@@ -145,3 +145,5 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
     </div>
   );
 }
+
+

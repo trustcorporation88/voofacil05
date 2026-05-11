@@ -46,3 +46,5 @@ export async function GET() {
     return NextResponse.json({ accepted: false });
   }
 }
+
+

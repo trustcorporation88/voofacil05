@@ -8,7 +8,14 @@ import { LandingHero } from "@/components/landing/hero";
 import { LandingSearchSection } from "@/components/landing/search-section";
 import { LandingResultsSection } from "@/components/landing/results-section";
 import { LandingFooter } from "@/components/landing/footer";
-import { ValoresSection, BeneficiosSection, FaqSection } from "@/components/landing/page-sections";import FavoritesModal from "@/components/favorites-modal";
+import {
+  BeneficiosSection,
+  ComoFuncionaSection,
+  FaqSection,
+  TransparenciaSection,
+  ValoresSection,
+} from "@/components/landing/page-sections";
+import FavoritesModal from "@/components/favorites-modal";
 import HistoryModal from "@/components/history-modal";
 import AlertsModal from "@/components/alerts-modal";
 import NotificationsModal from "@/components/notifications-modal";
@@ -17,13 +24,13 @@ import DisclaimerModal from "@/components/disclaimer-modal";
 import LoginModal from "@/components/auth/login-modal";
 import RegisterModal from "@/components/auth/register-modal";
 
-type FilterType = 'all' | 'direct' | '1-stop' | '2-stops' | 'cheapest';
+type FilterType = "all" | "direct" | "1-stop" | "2-stops" | "cheapest";
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
   const [flights, setFlights] = useState<Flight[]>([]);
   const [searchParams, setSearchParams] = useState<SearchParams | null>(null);
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -65,33 +72,35 @@ export default function Home() {
     setFlights([]);
     setProviderHealth({});
     setSearchWarnings([]);
-    setActiveFilter('all');
+    setActiveFilter("all");
 
     try {
-      const response = await fetch('/api/search-flights', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/search-flights", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(params),
       });
+
       const data: SearchResponse = await response.json();
+
       setFlights(data.flights || []);
       setProviderHealth(data.providers || {});
       setSearchWarnings(data.warnings || []);
-      try {
-        fetch('/api/history', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            origin: params.origin,
-            destination: params.destination,
-            departureDate: params.departureDate,
-            returnDate: params.returnDate || null,
-            passengers: params.passengers,
-          }),
-        }).catch(() => {});
-      } catch {}
+
+      fetch("/api/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          origin: params.origin,
+          destination: params.destination,
+          departureDate: params.departureDate,
+          returnDate: params.returnDate || null,
+          passengers: params.passengers,
+        }),
+      }).catch(() => {});
     } catch (err) {
-      console.error('Search error:', err);
+      console.error("Search error:", err);
+      setSearchWarnings(["Não foi possível concluir a busca agora. Tente novamente em instantes."]);
     } finally {
       setLoading(false);
     }
@@ -99,16 +108,32 @@ export default function Home() {
 
   const filteredFlights = useMemo(() => {
     let filtered = [...flights];
-    if (activeFilter === 'direct') filtered = filtered.filter((f) => (f.stops ?? 0) === 0);
-    else if (activeFilter === '1-stop') filtered = filtered.filter((f) => (f.stops ?? 0) === 1);
-    else if (activeFilter === '2-stops') filtered = filtered.filter((f) => (f.stops ?? 0) >= 2);
-    else if (activeFilter === 'cheapest')
-      filtered = filtered.sort((a, b) => (parseFloat(a.price.total) || Infinity) - (parseFloat(b.price.total) || Infinity));
-    if (selectedAirline) filtered = filtered.filter((f) => (f.airline || '') === selectedAirline);
+
+    if (activeFilter === "direct") {
+      filtered = filtered.filter((f) => (f.stops ?? 0) === 0);
+    } else if (activeFilter === "1-stop") {
+      filtered = filtered.filter((f) => (f.stops ?? 0) === 1);
+    } else if (activeFilter === "2-stops") {
+      filtered = filtered.filter((f) => (f.stops ?? 0) >= 2);
+    } else if (activeFilter === "cheapest") {
+      filtered = filtered.sort(
+        (a, b) =>
+          (parseFloat(a.price.total) || Infinity) -
+          (parseFloat(b.price.total) || Infinity)
+      );
+    }
+
+    if (selectedAirline) {
+      filtered = filtered.filter((f) => (f.airline || "") === selectedAirline);
+    }
+
     return filtered;
   }, [flights, activeFilter, selectedAirline]);
 
-  const airlines = useMemo(() => Array.from(new Set(flights.map((f) => f.airline || 'Outros'))), [flights]);
+  const airlines = useMemo(
+    () => Array.from(new Set(flights.map((f) => f.airline || "Outros"))),
+    [flights]
+  );
 
   return (
     <div className="min-h-screen bg-brand-surface selection:bg-brand-charcoal selection:text-white">
@@ -127,17 +152,11 @@ export default function Home() {
       />
 
       <LandingHero
-        onDiscover={() => document.getElementById('início')?.scrollIntoView({ behavior: 'smooth' })}
+        onDiscover={() =>
+          document.getElementById("busca")?.scrollIntoView({ behavior: "smooth" })
+        }
         onBook={() => setShowLoginModal(true)}
       />
-
-      <div className="horizon-line" />
-      <ValoresSection />
-      <div className="horizon-line" />
-      <BeneficiosSection />
-      <div className="horizon-line" />
-      <FaqSection />
-      <div className="horizon-line" />
 
       <LandingSearchSection
         onSearch={handleSearch}
@@ -170,31 +189,70 @@ export default function Home() {
         />
       )}
 
+      <div className="horizon-line" />
+      <BeneficiosSection />
+      <div className="horizon-line" />
+      <ComoFuncionaSection />
+      <div className="horizon-line" />
+      <ValoresSection />
+      <div className="horizon-line" />
+      <TransparenciaSection />
+      <div className="horizon-line" />
+      <FaqSection />
+      <div className="horizon-line" />
+
       <LandingFooter />
 
-      {/* Modals */}
       <LoginModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
-        onSwitchToRegister={() => { setShowLoginModal(false); setShowRegisterModal(true); }}
+        onSwitchToRegister={() => {
+          setShowLoginModal(false);
+          setShowRegisterModal(true);
+        }}
       />
+
       <RegisterModal
         isOpen={showRegisterModal}
         onClose={() => setShowRegisterModal(false)}
-        onSwitchToLogin={() => { setShowRegisterModal(false); setShowLoginModal(true); }}
+        onSwitchToLogin={() => {
+          setShowRegisterModal(false);
+          setShowLoginModal(true);
+        }}
       />
+
       <FavoritesModal
         isOpen={showFavoritesModal}
         onClose={() => setShowFavoritesModal(false)}
-        onSearch={(params: any) => handleSearch({ ...params, region: searchParams?.region || 'brasil' } as any)}
-        currentSearch={searchParams ? { origin: searchParams.origin, destination: searchParams.destination, departureDate: searchParams.departureDate, returnDate: searchParams.returnDate, passengers: searchParams.passengers } : null}
+        onSearch={(params: any) =>
+          handleSearch({ ...params, region: searchParams?.region || "brasil" } as any)
+        }
+        currentSearch={
+          searchParams
+            ? {
+                origin: searchParams.origin,
+                destination: searchParams.destination,
+                departureDate: searchParams.departureDate,
+                returnDate: searchParams.returnDate,
+                passengers: searchParams.passengers,
+              }
+            : null
+        }
       />
+
       <HistoryModal
         isOpen={showHistoryModal}
         onClose={() => setShowHistoryModal(false)}
-        onSearch={(params: any) => handleSearch({ ...params, region: searchParams?.region || 'brasil' } as any)}
+        onSearch={(params: any) =>
+          handleSearch({ ...params, region: searchParams?.region || "brasil" } as any)
+        }
       />
-      <AlertsModal isOpen={showAlertsModal} onClose={() => setShowAlertsModal(false)} />
+
+      <AlertsModal
+        isOpen={showAlertsModal}
+        onClose={() => setShowAlertsModal(false)}
+      />
+
       {searchParams && (
         <CreateAlertModal
           isOpen={showCreateAlert}
@@ -207,6 +265,7 @@ export default function Home() {
           currentPrice={flights.length > 0 ? flights[0].price.total : undefined}
         />
       )}
+
       <NotificationsModal
         isOpen={showNotifications}
         onClose={() => setShowNotifications(false)}
@@ -215,3 +274,5 @@ export default function Home() {
     </div>
   );
 }
+
+

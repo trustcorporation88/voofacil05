@@ -219,3 +219,5 @@ export async function getTravelpayoutsCalendarLink(params: {
   const { origin, destination } = params;
   return `https://www.aviasales.com/search/${origin}${destination}?marker=${TRAVELPAYOUTS_MARKER}`;
 }
+
+

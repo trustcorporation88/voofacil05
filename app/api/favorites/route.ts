@@ -92,3 +92,5 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Erro ao remover favorito" }, { status: 500 });
   }
 }
+
+

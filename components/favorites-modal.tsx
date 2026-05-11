@@ -204,3 +204,5 @@ export default function FavoritesModal({ isOpen, onClose, onSearch, currentSearc
     </div>
   );
 }
+
+

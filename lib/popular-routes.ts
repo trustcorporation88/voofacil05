@@ -42,3 +42,5 @@ export function getRouteBySlug(slug: string): Route | undefined {
 export function getRouteSlug(route: Route): string {
   return `${route.origin.toLowerCase()}-${route.destination.toLowerCase()}`;
 }
+
+

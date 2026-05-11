@@ -1,54 +1,231 @@
-'use client';
+"use client";
 
-import { motion } from 'motion/react';
-import { useState } from 'react';
-import { ChevronDown, Check, PlaneTakeoff, Users, TrendingUp } from 'lucide-react';
+import { motion } from "motion/react";
+import { useState } from "react";
+import {
+  Check,
+  ChevronDown,
+  Clock,
+  Filter,
+  Globe2,
+  PlaneTakeoff,
+  Search,
+  ShieldCheck,
+  Smartphone,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 
-/* ── HISTÓRIA ─────────────────────────────────────────────────────────────── */
-const TIMELINE = [
-  { year: '2018', title: 'Fundação', desc: 'Cortex Airlines nasce com uma missão: democratizar o acesso à aviação executiva sem abrir mão do padrão de excelência.' },
-  { year: '2020', title: 'Expansão Nacional', desc: 'Ampliamos a frota para 12 aeronaves cobrindo todos os estados brasileiros, com base em GRU, GIG e BSB.' },
-  { year: '2022', title: 'Plataforma Digital', desc: 'Lançamos o sistema de reservas inteligente com busca em tempo real, alertas de preço e recomendação por IA.' },
-  { year: '2024', title: 'Rotas Internacionais', desc: 'Inauguramos operações para Miami, Lisboa, Paris e Buenos Aires, consolidando o corredor premium transatlântico.' },
-  { year: '2026', title: 'Referência do Setor', desc: 'Reconhecidos como o melhor operador de aviação executiva da América Latina pela Aviation Business Awards.' },
+function SectionTitle({
+  eyebrow,
+  title,
+  desc,
+  light = false,
+}: {
+  eyebrow: string;
+  title: string;
+  desc?: string;
+  light?: boolean;
+}) {
+  return (
+    <motion.div
+      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 20 }}
+      viewport={{ once: true }}
+      className="text-center mb-14"
+    >
+      <span
+        className={`inline-block text-[10px] font-bold uppercase tracking-[0.3em] mb-4 ${
+          light ? "text-white/60" : "text-brand-gray-600"
+        }`}
+      >
+        {eyebrow}
+      </span>
+      <h2
+        className={`text-4xl md:text-5xl font-bold tracking-tight ${
+          light ? "text-white" : "text-brand-charcoal"
+        }`}
+      >
+        {title}
+      </h2>
+      {desc && (
+        <p
+          className={`mt-5 text-base md:text-lg max-w-3xl mx-auto leading-relaxed ${
+            light ? "text-white/70" : "text-brand-gray-600"
+          }`}
+        >
+          {desc}
+        </p>
+      )}
+    </motion.div>
+  );
+}
+
+const BENEFICIOS = [
+  {
+    icon: PlaneTakeoff,
+    title: "Busca rápida de voos",
+    desc: "Pesquise origem, destino, datas e passageiros em uma interface simples, otimizada para celular e desktop.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Alertas de preço",
+    desc: "Acompanhe rotas de interesse e receba avisos quando houver movimentações relevantes de preço.",
+  },
+  {
+    icon: Filter,
+    title: "Filtros úteis",
+    desc: "Compare opções por preço, horário, duração, escalas e características da tarifa.",
+  },
+  {
+    icon: Globe2,
+    title: "Rotas nacionais e internacionais",
+    desc: "Organize buscas para destinos no Brasil e no exterior, conforme disponibilidade dos parceiros e provedores.",
+  },
+  {
+    icon: Clock,
+    title: "Menos tempo pesquisando",
+    desc: "Centralize informações importantes para decidir com mais rapidez e evitar buscas repetidas.",
+  },
+  {
+    icon: Smartphone,
+    title: "Experiência mobile",
+    desc: "Acesse pelo navegador ou instale como aplicativo PWA/TWA para uma experiência mais fluida no smartphone.",
+  },
 ];
 
-export function HistoriaSection() {
+export function BeneficiosSection() {
   return (
-    <section id="história" className="py-24 px-6 max-w-5xl mx-auto">
-      <motion.div
-        whileInView={{ opacity: 1, y: 0 }}
-        initial={{ opacity: 0, y: 20 }}
-        viewport={{ once: true }}
-        className="text-center mb-16"
-      >
-        <span className="inline-block text-[10px] font-bold text-brand-gray-600 uppercase tracking-[0.3em] mb-4">
-          NOSSA TRAJETÓRIA
-        </span>
-        <h2 className="text-4xl md:text-5xl font-bold text-brand-charcoal tracking-tight">
-          Uma História de Excelência
-        </h2>
-      </motion.div>
+    <section id="beneficios" className="py-24 px-6 max-w-6xl mx-auto scroll-mt-28">
+      <SectionTitle
+        eyebrow="BENEFÍCIOS"
+        title="Tudo para facilitar sua próxima viagem"
+        desc="Compare, acompanhe e organize suas buscas de voo com recursos pensados para economia, praticidade e clareza."
+      />
 
-      <div className="relative">
-        <div className="absolute left-8 top-0 bottom-0 w-[1px] bg-brand-gray-300 hidden md:block" />
-        <div className="space-y-8">
-          {TIMELINE.map(({ year, title, desc }, i) => (
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {BENEFICIOS.map(({ icon: Icon, title, desc }, i) => (
+          <motion.div
+            key={title}
+            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.05 }}
+            className="bg-white border border-brand-gray-300/50 rounded-3xl p-7 hover:shadow-md transition-all"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-brand-charcoal text-white flex items-center justify-center mb-5">
+              <Icon className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-brand-charcoal mb-3">{title}</h3>
+            <p className="text-sm text-brand-gray-600 leading-relaxed">{desc}</p>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const STEPS = [
+  "Informe origem, destino, datas e quantidade de passageiros.",
+  "Compare as opções disponíveis por preço, horário, duração e conexões.",
+  "Use filtros, favoritos e alertas para acompanhar oportunidades.",
+  "Confira as condições finais antes de avançar para a reserva.",
+];
+
+export function ComoFuncionaSection() {
+  return (
+    <section id="como-funciona" className="py-24 px-6 bg-brand-charcoal text-white scroll-mt-28">
+      <div className="max-w-6xl mx-auto grid lg:grid-cols-[0.9fr_1.1fr] gap-12 items-center">
+        <motion.div
+          whileInView={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, x: -20 }}
+          viewport={{ once: true }}
+        >
+          <span className="inline-block text-[10px] font-bold text-white/60 uppercase tracking-[0.3em] mb-4">
+            COMO FUNCIONA
+          </span>
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
+            Uma busca simples, com informações mais organizadas
+          </h2>
+          <p className="mt-5 text-base md:text-lg text-white/70 leading-relaxed">
+            A Voos Cortex ajuda você a sair da dúvida mais rápido, reunindo os dados que realmente importam para escolher um voo.
+          </p>
+        </motion.div>
+
+        <div className="space-y-4">
+          {STEPS.map((step, i) => (
             <motion.div
-              key={year}
-              whileInView={{ opacity: 1, x: 0 }}
-              initial={{ opacity: 0, x: -20 }}
+              key={step}
+              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 16 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="md:pl-20 relative"
+              transition={{ delay: i * 0.08 }}
+              className="bg-white/8 border border-white/10 rounded-2xl p-5 flex gap-4"
             >
-              <div className="hidden md:flex absolute left-0 top-2 w-16 h-8 items-center justify-end pr-4">
-                <div className="w-3 h-3 rounded-full bg-brand-charcoal border-2 border-brand-surface ring-2 ring-brand-charcoal/20" />
+              <div className="shrink-0 w-8 h-8 rounded-full bg-white text-brand-charcoal flex items-center justify-center text-sm font-bold">
+                {i + 1}
               </div>
-              <div className="bg-white border border-brand-gray-300/50 rounded-2xl p-6 hover:shadow-md transition-all">
-                <span className="text-[10px] font-bold text-brand-gray-600 uppercase tracking-widest">{year}</span>
-                <h3 className="text-lg font-bold text-brand-charcoal mt-1 mb-2">{title}</h3>
-                <p className="text-sm text-brand-gray-600 leading-relaxed">{desc}</p>
+              <p className="text-sm md:text-base text-white/80 leading-relaxed">
+                {step}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const VALORES = [
+  {
+    icon: Search,
+    title: "Comparação clara",
+    desc: "Veja informações essenciais para comparar voos com mais segurança: preço, duração, horários, conexões e condições disponíveis.",
+    bg: "bg-brand-charcoal",
+    fg: "text-white",
+  },
+  {
+    icon: Wallet,
+    title: "Economia inteligente",
+    desc: "Acompanhe rotas, datas e variações de preço para encontrar oportunidades melhores antes de emitir sua passagem.",
+    bg: "bg-[#e9edff]",
+    fg: "text-brand-charcoal",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Transparência primeiro",
+    desc: "A Voos Cortex não é uma companhia aérea. Somos uma plataforma para busca, comparação e organização de informações de voos.",
+    bg: "bg-white border border-brand-gray-300/50",
+    fg: "text-brand-charcoal",
+  },
+];
+
+export function ValoresSection() {
+  return (
+    <section id="valores" className="py-24 px-6 bg-brand-surface scroll-mt-28">
+      <div className="max-w-6xl mx-auto">
+        <SectionTitle
+          eyebrow="POR QUE USAR"
+          title="Menos confusão. Mais controle na busca."
+          desc="Nosso foco é simplificar a etapa mais cansativa da viagem: encontrar uma boa opção de voo sem abrir dezenas de abas."
+        />
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {VALORES.map(({ icon: Icon, title, desc, bg, fg }, i) => (
+            <motion.div
+              key={title}
+              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className={`${bg} ${fg} rounded-3xl p-8 min-h-[280px] flex flex-col justify-between hover:-translate-y-1 transition-transform`}
+            >
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center mb-6">
+                  <Icon className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold mb-3">{title}</h3>
+                <p className="text-sm leading-relaxed opacity-80">{desc}</p>
               </div>
             </motion.div>
           ))}
@@ -58,204 +235,141 @@ export function HistoriaSection() {
   );
 }
 
-/* ── VALORES ──────────────────────────────────────────────────────────────── */
-const VALORES = [
-  {
-    icon: PlaneTakeoff,
-    title: 'Excelência Operacional',
-    desc: 'Cada voo é executado com o mais alto padrão técnico. Manutenção preventiva rigorosa e tripulação certificada ANAC/FAA.',
-    bg: 'bg-brand-charcoal',
-    fg: 'text-white',
-  },
-  {
-    icon: Users,
-    title: 'Cliente no Centro',
-    desc: 'Você não é um passageiro — é o anfitrião. Cada detalhe é personalizado: rota, horário, catering, temperatura a bordo.',
-    bg: 'bg-[#e9edff]',
-    fg: 'text-brand-charcoal',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Inovação Contínua',
-    desc: 'IA para recomendação de voos, alertas de preço em tempo real e booking em menos de 3 minutos pelo nosso app.',
-    bg: 'bg-white border border-brand-gray-300/50',
-    fg: 'text-brand-charcoal',
-  },
+const TRUST_ITEMS = [
+  "Não somos uma companhia aérea.",
+  "As tarifas podem variar conforme disponibilidade e regras de cada fornecedor.",
+  "Taxas, bagagem, remarcação e cancelamento dependem da companhia, rota e tipo de tarifa.",
+  "Antes da compra, confira sempre as condições finais no ambiente de reserva.",
 ];
 
-export function ValoresSection() {
+export function TransparenciaSection() {
   return (
-    <section id="valores" className="py-24 px-6 max-w-7xl mx-auto">
-      <motion.div
-        whileInView={{ opacity: 1, y: 0 }}
-        initial={{ opacity: 0, y: 20 }}
-        viewport={{ once: true }}
-        className="text-center mb-16"
-      >
-        <span className="inline-block text-[10px] font-bold text-brand-gray-600 uppercase tracking-[0.3em] mb-4">
-          O QUE NOS MOVE
-        </span>
-        <h2 className="text-4xl md:text-5xl font-bold text-brand-charcoal tracking-tight">
-          Nossos Valores
-        </h2>
-      </motion.div>
+    <section id="transparencia" className="py-20 px-6 max-w-6xl mx-auto scroll-mt-28">
+      <div className="bg-white border border-brand-gray-300/50 rounded-[2rem] p-8 md:p-12">
+        <div className="grid lg:grid-cols-[0.85fr_1.15fr] gap-10 items-start">
+          <div>
+            <span className="inline-block text-[10px] font-bold text-brand-gray-600 uppercase tracking-[0.3em] mb-4">
+              TRANSPARÊNCIA
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-brand-charcoal tracking-tight">
+              Informação clara antes de decidir
+            </h2>
+            <p className="mt-4 text-sm md:text-base text-brand-gray-600 leading-relaxed">
+              Nosso papel é facilitar a comparação. A emissão, as regras da tarifa e as condições finais podem depender de companhias, agências ou provedores parceiros.
+            </p>
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {VALORES.map(({ icon: Icon, title, desc, bg, fg }, i) => (
-          <motion.div
-            key={title}
-            whileInView={{ opacity: 1, y: 0 }}
-            initial={{ opacity: 0, y: 30 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.15 }}
-            className={`rounded-2xl p-10 flex flex-col gap-6 ${bg}`}
-          >
-            <Icon className={`w-10 h-10 ${fg}`} />
-            <div>
-              <h3 className={`text-xl font-bold mb-3 ${fg}`}>{title}</h3>
-              <p className={`text-sm leading-relaxed ${fg} opacity-80`}>{desc}</p>
-            </div>
-          </motion.div>
-        ))}
+          <div className="space-y-4">
+            {TRUST_ITEMS.map((item) => (
+              <div key={item} className="flex gap-3">
+                <div className="mt-0.5 w-6 h-6 rounded-full bg-brand-charcoal text-white flex items-center justify-center shrink-0">
+                  <Check className="w-4 h-4" />
+                </div>
+                <p className="text-sm text-brand-gray-600 leading-relaxed">
+                  {item}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
-/* ── BENEFÍCIOS ───────────────────────────────────────────────────────────── */
-const BENEFICIOS = [
-  'Acesso a mais de 5.000 aeroportos regionais — sem escalas forçadas',
-  'Embarque em 15 minutos, sem filas e sem stress',
-  'Privacidade total: sua reunião começa no ar',
-  'Frota disponível 24/7, 365 dias por ano',
-  'Catering personalizado com chefs parceiros',
-  'Conectividade satellite de alta velocidade a bordo',
-  'Suporte concierge dedicado antes, durante e após o voo',
-  'Preços transparentes — sem taxas ocultas no checkout',
-  'Alertas automáticos de melhor preço por rota',
-  'IA integrada para análise e recomendação de voos',
-];
-
-export function BeneficiosSection() {
-  return (
-    <section id="benefícios" className="py-24 px-6 max-w-5xl mx-auto">
-      <motion.div
-        whileInView={{ opacity: 1, y: 0 }}
-        initial={{ opacity: 0, y: 20 }}
-        viewport={{ once: true }}
-        className="mb-16"
-      >
-        <span className="inline-block text-[10px] font-bold text-brand-gray-600 uppercase tracking-[0.3em] mb-4">
-          POR QUE VOAR COM A CORTEX
-        </span>
-        <h2 className="text-4xl md:text-5xl font-bold text-brand-charcoal tracking-tight">
-          Benefícios Exclusivos{' '}
-          <span className="text-2xl md:text-4xl font-medium text-brand-gray-500">(Em Breve)</span>
-        </h2>
-      </motion.div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {BENEFICIOS.map((item, i) => (
-          <motion.div
-            key={i}
-            whileInView={{ opacity: 1, x: 0 }}
-            initial={{ opacity: 0, x: -15 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.05 }}
-            className="flex items-start gap-4 bg-white border border-brand-gray-300/50 rounded-xl p-5"
-          >
-            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-brand-charcoal flex items-center justify-center mt-0.5">
-              <Check className="w-3.5 h-3.5 text-white" />
-            </div>
-            <p className="text-sm text-brand-gray-600 leading-relaxed">{item}</p>
-          </motion.div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* ── FAQ ──────────────────────────────────────────────────────────────────── */
 const FAQS = [
   {
-    q: 'Quais companhias aéreas estão disponíveis na plataforma?',
-    a: 'Buscamos passagens em todas as principais companhias: LATAM, Azul, Gol, American Airlines, Delta, Copa Airlines, TAP, Iberia, Air France e dezenas de outras nacionais e internacionais. Tudo em uma única busca, com comparação de preços em tempo real.',
+    q: "A Voos Cortex vende passagens diretamente?",
+    a: "A Voos Cortex funciona como uma plataforma de busca, comparação e organização de informações de voos. Dependendo da integração disponível, a finalização pode acontecer em ambiente parceiro, companhia aérea ou fluxo indicado na própria plataforma.",
   },
   {
-    q: 'Como funciona a política de bagagem das companhias?',
-    a: 'Varia por companhia e tarifa. LATAM: tarifa Basic inclui só item pessoal; tarifas Plus+ incluem 1 mala despachada de 23 kg. Azul: tarifa "Azul" não inclui despachada; "Mais Azul" inclui 1 peça de 23 kg. American Airlines e Copa (voos internacionais): 1ª mala a partir de USD 45–50. Delta: maioria das tarifas internacionais com 2 malas de 23 kg. Exibimos a política completa antes de você finalizar a compra.',
+    q: "Os preços exibidos são garantidos?",
+    a: "Tarifas aéreas mudam com frequência e dependem de disponibilidade, rota, data, moeda, taxas e regras do fornecedor. Por isso, o preço final deve sempre ser conferido antes da confirmação da compra.",
   },
   {
-    q: 'Posso cancelar ou remarcar minha passagem?',
-    a: 'Pela regra da ANAC, todas as companhias permitem cancelamento gratuito em até 24h após a compra (desde que a viagem seja em mais de 7 dias). Após esse prazo, as regras variam: LATAM e Azul cobram multa de até R$ 550 + diferença tarifária nas tarifas básicas. American Airlines e Delta não cobram taxa de alteração na maioria das tarifas (exceto Basic Economy). Sempre confira as condições da tarifa antes de comprar.',
+    q: "O preço inclui bagagem?",
+    a: "As regras de bagagem variam conforme companhia, rota e tipo de tarifa. Quando disponível, exibimos informações sobre bagagem e condições da tarifa, mas a confirmação final deve ser feita antes da emissão.",
   },
   {
-    q: 'Com quanto tempo de antecedência devo comprar?',
-    a: 'Para voos nacionais, os melhores preços costumam aparecer entre 3 e 8 semanas antes da viagem. Para internacionais (ex: voos para EUA com American, Delta ou Copa), recomendamos de 2 a 4 meses de antecedência. Use nosso alerta de preço para ser notificado quando o valor cair.',
+    q: "Posso cancelar ou remarcar um voo?",
+    a: "Cancelamento, remarcação, reembolso e crédito dependem das regras da companhia aérea, da tarifa escolhida e do canal de emissão. Antes de comprar, confira as condições da tarifa.",
   },
   {
-    q: 'Como funcionam os alertas de preço?',
-    a: 'Após realizar uma busca, clique em "Criar alerta" para monitorar a rota. Você recebe notificação por e-mail ou push quando o preço cair abaixo do valor que você definir — ideal para comprar na hora certa sem precisar ficar verificando manualmente.',
+    q: "Como funcionam os alertas de preço?",
+    a: "Você pode acompanhar uma rota ou busca específica. Quando houver mudança relevante ou oportunidade dentro dos critérios definidos, a plataforma pode enviar uma notificação, conforme suas permissões e configurações.",
   },
   {
-    q: 'O preço exibido inclui todas as taxas?',
-    a: 'Sim. Os preços exibidos já incluem taxas aeroportuárias e impostos obrigatórios. Bagagens despachadas podem ter custo adicional conforme a tarifa de cada companhia — informamos isso claramente antes de você concluir a compra.',
-  },
-  {
-    q: 'Posso comprar passagens de companhias diferentes na mesma viagem?',
-    a: 'Sim. Combinar voos de companhias diferentes (ex: ida com LATAM e volta com Azul) pode resultar em preços menores. Nossa busca exibe automaticamente as combinações mais econômicas, incluindo opções multi-companhia.',
-  },
-  {
-    q: 'Quais documentos preciso para viajar?',
-    a: 'Voos nacionais: RG, CNH ou passaporte. Voos internacionais: passaporte válido e, quando necessário, visto do país de destino. Para os EUA (American Airlines e Delta), é obrigatório o ESTA ou visto americano. Para a América do Sul via Copa, verifique os requisitos do país destino.',
+    q: "A Voos Cortex é uma companhia aérea?",
+    a: "Não. A Voos Cortex não opera aeronaves, não possui frota própria e não presta serviço de transporte aéreo. A plataforma ajuda usuários a buscar, comparar e acompanhar opções de voos.",
   },
 ];
 
-
-function FaqItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div
-      className="border border-brand-gray-300/50 rounded-xl overflow-hidden cursor-pointer"
-      onClick={() => setOpen(!open)}
-    >
-      <div className="flex items-center justify-between p-6 bg-white hover:bg-brand-surface transition-colors">
-        <span className="text-sm font-semibold text-brand-charcoal pr-4">{q}</span>
-        <ChevronDown
-          className={`w-5 h-5 text-brand-gray-600 flex-shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
-        />
-      </div>
-      {open && (
-        <div className="px-6 pb-6 bg-brand-surface border-t border-brand-gray-300/30">
-          <p className="text-sm text-brand-gray-600 leading-relaxed pt-4">{a}</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function FaqSection() {
-  return (
-    <section id="faq" className="py-24 px-6 max-w-3xl mx-auto">
-      <motion.div
-        whileInView={{ opacity: 1, y: 0 }}
-        initial={{ opacity: 0, y: 20 }}
-        viewport={{ once: true }}
-        className="text-center mb-16"
-      >
-        <span className="inline-block text-[10px] font-bold text-brand-gray-600 uppercase tracking-[0.3em] mb-4">
-          DÚVIDAS FREQUENTES
-        </span>
-        <h2 className="text-4xl md:text-5xl font-bold text-brand-charcoal tracking-tight">
-          FAQ
-        </h2>
-      </motion.div>
+  const [open, setOpen] = useState<number | null>(0);
 
-      <div className="space-y-3">
-        {FAQS.map((item) => (
-          <FaqItem key={item.q} {...item} />
-        ))}
+  return (
+    <section id="faq" className="py-24 px-6 max-w-4xl mx-auto scroll-mt-28">
+      <SectionTitle
+        eyebrow="DÚVIDAS FREQUENTES"
+        title="O que você precisa saber"
+      />
+
+      <div className="space-y-4">
+        {FAQS.map(({ q, a }, i) => {
+          const isOpen = open === i;
+
+          return (
+            <motion.div
+              key={q}
+              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 12 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.04 }}
+              className="bg-white border border-brand-gray-300/50 rounded-2xl overflow-hidden"
+            >
+              <button
+                type="button"
+                onClick={() => setOpen(isOpen ? null : i)}
+                className="w-full flex items-center justify-between gap-4 p-5 text-left"
+                aria-expanded={isOpen}
+              >
+                <span className="text-sm md:text-base font-bold text-brand-charcoal">
+                  {q}
+                </span>
+                <ChevronDown
+                  className={`w-5 h-5 text-brand-gray-600 shrink-0 transition-transform ${
+                    isOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {isOpen && (
+                <div className="px-5 pb-5">
+                  <p className="text-sm text-brand-gray-600 leading-relaxed">
+                    {a}
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
       </div>
     </section>
   );
 }
+
+export function PageSections() {
+  return (
+    <>
+      <BeneficiosSection />
+      <ComoFuncionaSection />
+      <ValoresSection />
+      <TransparenciaSection />
+      <FaqSection />
+    </>
+  );
+}
+
+export default PageSections;
+
+

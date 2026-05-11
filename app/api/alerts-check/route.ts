@@ -18,10 +18,10 @@ async function sendAlertEmail(toEmail: string, origin: string, destination: stri
     await resend.emails.send({
       from: process.env.RESEND_FROM || "onboarding@resend.dev",
       to: toEmail,
-      subject: `✈️ VooFácil: Preço baixou! ${origin} → ${destination} por R$${Math.round(price)}`,
+      subject: `✈️ Voos Cortex: Preço baixou! ${origin} → ${destination} por R$${Math.round(price)}`,
       html: `
         <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:24px;background:#f9fafb;border-radius:12px">
-          <h2 style="color:#1a56db;margin-bottom:8px">✈️ Alerta de Preço - VooFácil</h2>
+          <h2 style="color:#1a56db;margin-bottom:8px">✈️ Alerta de Preço - Voos Cortex</h2>
           <p style="font-size:18px;font-weight:bold;color:#111">
             ${origin} → ${destination}
           </p>
@@ -30,7 +30,7 @@ async function sendAlertEmail(toEmail: string, origin: string, destination: stri
           <a href="https://www.vooscortex.com.br" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#1a56db;color:#fff;border-radius:8px;text-decoration:none;font-weight:bold">
             Ver passagem agora
           </a>
-          <p style="font-size:12px;color:#999;margin-top:24px">VooFácil · vooscortex.com.br</p>
+          <p style="font-size:12px;color:#999;margin-top:24px">Voos Cortex · vooscortex.com.br</p>
         </div>
       `,
     });
@@ -171,3 +171,6 @@ export async function GET() {
     return NextResponse.json({ error: "Erro ao verificar alertas" }, { status: 500 });
   }
 }
+
+
+

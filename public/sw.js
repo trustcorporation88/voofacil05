@@ -1,11 +1,68 @@
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open("voofacil-static-v1").then((cache) => {
+      return cache.addAll(["/", "/manifest.webmanifest", "/voos-cortex-logo-v2.png", "/favicon.svg"]);
+    })
+  );
+
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys
+          .filter((key) => key !== "voofacil-static-v1")
+          .map((key) => caches.delete(key))
+      );
+    })
+  );
+
+  self.clients.claim();
+});
+
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  if (request.method !== "GET") return;
+
+  // App-shell style fallback for navigation requests.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request).catch(() => {
+        return caches.match("/");
+      })
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) return cachedResponse;
+
+      return fetch(request)
+        .then((response) => {
+          if (!response || response.status !== 200 || response.type !== "basic") {
+            return response;
+          }
+
+          const responseToCache = response.clone();
+          caches.open("voofacil-static-v1").then((cache) => cache.put(request, responseToCache));
+          return response;
+        })
+        .catch(() => caches.match("/"));
+    })
+  );
+});
+
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
   const data = event.data.json();
   const options = {
     body: data.body || "Novo alerta de preço!",
-    icon: "/logo.png",
-    badge: "/logo.png",
+    icon: "/voos-cortex-logo-v2.png",
+    badge: "/voos-cortex-logo-v2.png",
     data: { url: data.url || "/" },
     vibrate: [200, 100, 200],
     tag: data.tag || "price-alert",
@@ -20,3 +77,7 @@ self.addEventListener("notificationclick", (event) => {
   const url = event.notification.data?.url || "/";
   event.waitUntil(clients.openWindow(url));
 });
+
+
+
+
