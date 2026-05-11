@@ -15,3 +15,5 @@ const child = spawn(process.execPath, [nextBin, ...args], {
 child.on('exit', (code) => {
   process.exit(code || 0);
 });
+
+

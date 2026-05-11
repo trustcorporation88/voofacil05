@@ -1,0 +1,43 @@
+{
+  "displayName": "Claude IA Assistant",
+  "description": "Integração Claude via API + GitHub Copilot Pro",
+  "version": "1.0.0",
+  "providers": [
+    {
+      "name": "GitHub Copilot Pro",
+      "id": "copilot",
+      "enabled": true,
+      "default": false
+    },
+    {
+      "name": "Claude 3.5 Sonnet",
+      "id": "claude",
+      "enabled": true,
+      "default": true,
+      "model": "claude-3-5-sonnet-20241022",
+      "apiKey": "${CLAUDE_API_KEY}",
+      "endpoint": "https://api.anthropic.com/v1/messages"
+    },
+    {
+      "name": "DeepSeek",
+      "id": "deepseek",
+      "enabled": true,
+      "default": false,
+      "model": "deepseek-chat",
+      "apiKey": "${DEEPSEEK_API_KEY}",
+      "endpoint": "https://api.deepseek.com/chat/completions"
+    }
+  ],
+  "keybindings": {
+    "claude": "Ctrl+Shift+Alt+C",
+    "copilot": "Ctrl+Shift+Alt+G",
+    "deepseek": "Ctrl+Shift+Alt+D"
+  },
+  "settings": {
+    "temperature": 0.7,
+    "maxTokens": 4000,
+    "autoFormatResponse": true
+  }
+}
+
+
