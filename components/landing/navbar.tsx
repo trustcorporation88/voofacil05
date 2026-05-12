@@ -224,7 +224,7 @@ export function LandingNavbar({
               </a>
             ))}
 
-            {session && status !== "loading" && (
+            {session && (
               <div className="grid grid-cols-1 gap-3 pt-3">
                 <button
                   type="button"
@@ -312,3 +312,4 @@ export function LandingNavbar({
     </header>
   );
 }
+
