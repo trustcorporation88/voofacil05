@@ -42,25 +42,25 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  password      String?   // Hash bcrypt para login com email
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                     String                  @id @default(cuid())
+  name                   String?
+  email                  String?                 @unique
+  emailVerified          DateTime?
+  password               String?
+  image                  String?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  savedSearches SavedSearch[]
-  searchHistory SearchHistory[]
-  priceAlerts   PriceAlert[]
-  notifications Notification[]
-  pushSubscription PushSubscription?
-  disclaimerAcceptance DisclaimerAcceptance?
-  visitSessions  VisitSession[]
-  pageViews      PageView[]
+  accounts               Account[]
+  sessions               Session[]
+  savedSearches          SavedSearch[]
+  searchHistory          SearchHistory[]
+  priceAlerts            PriceAlert[]
+  notifications          Notification[]
+  pushSubscription       PushSubscription?
+  disclaimerAcceptances  DisclaimerAcceptance[]
+  visitSessions          VisitSession[]
+  pageViews              PageView[]
 }
 
 model VerificationToken {
@@ -75,7 +75,7 @@ model VerificationToken {
 model SavedSearch {
   id            String   @id @default(cuid())
   userId        String
-  name          String   // Nome dado pelo usuário (ex: "Viagem Paris")
+  name          String
   origin        String
   destination   String
   departureDate String
@@ -141,12 +141,20 @@ model PushSubscription {
 }
 
 model DisclaimerAcceptance {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  acceptedAt DateTime @default(now())
-  ip        String?
+  id             String   @id @default(cuid())
+  userId         String
+  version        String
+  disclaimerText String   @db.Text
+  acceptedAt     DateTime @default(now())
+  ip             String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, version])
+  @@index([userId])
+  @@index([acceptedAt])
 }
 
 model Notification {
@@ -157,7 +165,7 @@ model Notification {
   read      Boolean   @default(false)
   createdAt DateTime  @default(now())
 
-  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   alert PriceAlert? @relation(fields: [alertId], references: [id], onDelete: SetNull)
 
   @@index([userId, read])
@@ -181,7 +189,7 @@ model VisitSession {
   deviceType      String?
   createdAt       DateTime   @default(now())
 
-  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   pageViews PageView[]
 
   @@index([userId])
@@ -191,13 +199,13 @@ model VisitSession {
 }
 
 model PageView {
-  id         String       @id @default(cuid())
-  sessionId  String
-  userId     String?
-  path       String
-  title      String?
-  referrer   String?
-  visitedAt  DateTime     @default(now())
+  id        String    @id @default(cuid())
+  sessionId String
+  userId    String?
+  path      String
+  title     String?
+  referrer  String?
+  visitedAt DateTime  @default(now())
 
   session VisitSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   user    User?        @relation(fields: [userId], references: [id], onDelete: SetNull)

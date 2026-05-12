@@ -1,78 +1,141 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Shield, Plane } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { Shield, AlertTriangle } from "lucide-react";
+import {
+  DISCLAIMER_ACCEPTANCE_LABEL,
+  DISCLAIMER_TEXT,
+  DISCLAIMER_TITLE,
+} from "@/lib/disclaimer";
 
 export default function DisclaimerModal() {
+  const { status } = useSession();
+
   const [show, setShow] = useState(false);
+  const [checked, setChecked] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function check() {
+      if (status !== "authenticated") {
+        setShow(false);
+        setLoading(false);
+        return;
+      }
+
       try {
-        const res = await fetch("/api/disclaimer-acceptance");
-        if (res.ok) {
-          const data = await res.json();
-          if (!data.accepted) setShow(true);
+        setLoading(true);
+        const res = await fetch("/api/disclaimer-acceptance", {
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          setShow(true);
+          return;
         }
+
+        const data = await res.json();
+        setShow(!data.accepted);
       } catch {
         setShow(true);
+      } finally {
+        setLoading(false);
       }
     }
+
     check();
-  }, []);
+  }, [status]);
 
   const handleAccept = async () => {
+    if (!checked) {
+      setError("É necessário marcar o aceite para continuar.");
+      return;
+    }
+
     try {
-      await fetch("/api/disclaimer-acceptance", { method: "POST" });
-    } catch {}
-    setShow(false);
+      setSubmitting(true);
+      setError("");
+
+      const res = await fetch("/api/disclaimer-acceptance", {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Falha ao registrar aceite");
+      }
+
+      setShow(false);
+    } catch (err: any) {
+      setError(err?.message || "Não foi possível registrar o aceite. Tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
+  if (status !== "authenticated") return null;
+  if (loading) return null;
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-            <Shield className="w-6 h-6 text-blue-600" />
-          </div>
-          <h2 className="text-xl font-bold text-gray-800">Importante</h2>
-        </div>
-
-        <div className="text-sm text-gray-600 space-y-3 mb-6">
-          <p>
-            Os preços exibidos neste site são <strong>estimativas obtidas em tempo real</strong> de nossos parceiros e podem sofrer alterações sem aviso prévio.
-          </p>
-
-          <p>
-            O <strong>valor final</strong> da sua passagem será confirmado apenas no momento da compra, diretamente no site do nosso parceiro.
-          </p>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
-            <Plane className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
+        <div className="border-b border-slate-200 p-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100">
+              <Shield className="h-6 w-6 text-amber-700" />
+            </div>
             <div>
-              <p className="font-semibold text-blue-800">Aviasales</p>
-              <p className="text-blue-700 text-xs mt-0.5">
-                Empresa com 17 anos de mercado, mais de 1.000 funcionários e uma das maiores plataformas de busca de voos da Europa.
-              </p>
+              <h2 className="text-xl font-bold text-slate-900">{DISCLAIMER_TITLE}</h2>
             </div>
           </div>
-
-          <p className="text-xs text-gray-400">
-            Ao clicar em &ldquo;Estou ciente&rdquo;, você confirma que compreende que os preços aqui apresentados são estimativas e que o valor final será exibido pelo parceiro no momento da compra.
-          </p>
         </div>
 
-        <button
-          onClick={handleAccept}
-          className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-        >
-          Estou ciente
-        </button>
+        <div className="max-h-[55vh] overflow-y-auto p-6">
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-700" />
+            <p className="text-sm text-amber-900">
+              Este aviso precisa ser aceito para liberar o uso da plataforma após o login.
+            </p>
+          </div>
+
+          <div className="whitespace-pre-line text-sm leading-7 text-slate-700">
+            {DISCLAIMER_TEXT}
+          </div>
+
+          <label className="mt-6 flex items-start gap-3 rounded-xl border border-slate-200 p-4">
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={(e) => {
+                setChecked(e.target.checked);
+                if (e.target.checked) setError("");
+              }}
+              className="mt-1 h-4 w-4"
+            />
+            <span className="text-sm text-slate-800">
+              {DISCLAIMER_ACCEPTANCE_LABEL}
+            </span>
+          </label>
+
+          {error && (
+            <p className="mt-3 text-sm font-medium text-red-600">{error}</p>
+          )}
+        </div>
+
+        <div className="border-t border-slate-200 p-6">
+          <button
+            onClick={handleAccept}
+            disabled={!checked || submitting}
+            className="w-full rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {submitting ? "Registrando aceite..." : "Li e estou ciente"}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
-
-
