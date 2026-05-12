@@ -4,39 +4,36 @@ import { useEffect } from "react";
 
 export function PwaBootstrap() {
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    async function clearDevPwaCache() {
-      if (process.env.NODE_ENV !== "development") return;
-
+    async function cleanupPwa() {
       try {
+        let changed = false;
+
         if ("serviceWorker" in navigator) {
           const registrations = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(registrations.map((registration) => registration.unregister()));
+
+          for (const registration of registrations) {
+            const ok = await registration.unregister();
+            if (ok) changed = true;
+          }
         }
 
         if ("caches" in window) {
-          const keys = await caches.keys();
-          await Promise.all(keys.map((key) => caches.delete(key)));
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map((name) => caches.delete(name)));
+          if (cacheNames.length > 0) changed = true;
         }
-      } catch {
-        // silencioso em desenvolvimento
+
+        if (changed) {
+          setTimeout(() => {
+            window.location.reload();
+          }, 300);
+        }
+      } catch (error) {
+        console.error("Erro ao limpar PWA/Service Worker:", error);
       }
     }
 
-    async function registerProductionServiceWorker() {
-      if (process.env.NODE_ENV !== "production") return;
-      if (!("serviceWorker" in navigator)) return;
-
-      try {
-        await navigator.serviceWorker.register("/sw.js");
-      } catch {
-        // silencioso em produção
-      }
-    }
-
-    clearDevPwaCache();
-    registerProductionServiceWorker();
+    cleanupPwa();
   }, []);
 
   return null;
