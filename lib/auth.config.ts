@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { isAdminEmail } from "@/lib/admin";
 
 const prisma = new PrismaClient();
 
@@ -47,7 +48,8 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           image: user.image,
-        };
+          isAdmin: isAdminEmail(user.email),
+        } as any;
       },
     }),
   ],
@@ -60,18 +62,23 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        (token as any).id = (user as any).id;
+        (token as any).isAdmin = isAdminEmail(
+          ((user as any).email || token.email || "") as string
+        );
+      } else if (token?.email) {
+        (token as any).isAdmin = isAdminEmail(token.email);
       }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.id;
+        (session.user as any).id = (token as any).id;
+        (session.user as any).isAdmin = Boolean((token as any).isAdmin);
       }
       return session;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
-
-

@@ -2,30 +2,31 @@ import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth.config";
+import { isAdminEmail } from "@/lib/admin";
 
 const prisma = new PrismaClient();
 
 export const dynamic = "force-dynamic";
 
-function getAdminEmails() {
-  return (process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-}
-
 function formatDurationSeconds(startedAt: Date, lastSeenAt: Date, durationSeconds: number) {
   if (durationSeconds > 0) return durationSeconds;
-  return Math.max(0, Math.floor((new Date(lastSeenAt).getTime() - new Date(startedAt).getTime()) / 1000));
+  return Math.max(
+    0,
+    Math.floor(
+      (new Date(lastSeenAt).getTime() - new Date(startedAt).getTime()) / 1000
+    )
+  );
 }
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    const sessionEmail = session?.user?.email?.toLowerCase();
-    const adminEmails = getAdminEmails();
+    const sessionUser = session?.user as any;
+    const sessionEmail = sessionUser?.email?.toLowerCase?.() || "";
+    const sessionIsAdmin =
+      Boolean(sessionUser?.isAdmin) || isAdminEmail(sessionEmail);
 
-    if (!sessionEmail || !adminEmails.includes(sessionEmail)) {
+    if (!sessionEmail || !sessionIsAdmin) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
@@ -70,6 +71,8 @@ export async function GET() {
             select: {
               acceptedAt: true,
               ip: true,
+              version: true,
+              userAgent: true,
             },
           },
           searchHistory: {
@@ -220,7 +223,9 @@ export async function GET() {
     const usersWithLastAccess = users.map((user) => ({
       ...user,
       lastSearch: user.searchHistory[0] || null,
+      latestAcceptance: user.disclaimerAcceptances?.[0] || null,
       searchHistory: undefined,
+      disclaimerAcceptances: undefined,
     }));
 
     const recentSessions = recentSessionsRaw.map((session) => ({
@@ -267,4 +272,3 @@ export async function GET() {
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }
-
