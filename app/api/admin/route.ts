@@ -64,7 +64,9 @@ export async function GET() {
           email: true,
           createdAt: true,
           updatedAt: true,
-          disclaimerAcceptance: {
+          disclaimerAcceptances: {
+            orderBy: { acceptedAt: "desc" },
+            take: 1,
             select: {
               acceptedAt: true,
               ip: true,
@@ -265,3 +267,4 @@ export async function GET() {
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }
+
