@@ -1,9 +1,13 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth.config";
 import { NextRequest, NextResponse } from 'next/server';
 import { searchWithSerpAPI, searchWithAmadeus, searchWithAirScraper } from '@/lib/flight-providers';
 import { searchTravelpayoutsFlights } from '@/lib/travelpayouts';
 import { SearchParams, Flight, ProviderHealth, SearchResponse } from '@/lib/types';
 import { getRegionAirports } from '@/lib/regions-config';
-
 const isDomesticBR = (origin: string, destination: string) => {
   const brAirports = getRegionAirports('brasil');
   return brAirports.includes(origin.toUpperCase()) && brAirports.includes(destination.toUpperCase());
@@ -121,8 +125,7 @@ ${JSON.stringify(flightSummary, null, 2)}
 
 Return ONLY a JSON array with exactly ${targetCount} flight IDs like: [0, 2, 5, 7, ...]
 No explanation, just the JSON array.`;
-
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
+const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -173,6 +176,19 @@ No explanation, just the JSON array.`;
 };
 
 export async function POST(request: NextRequest) {
+  // LOGIN_REQUIRED_COTACAO_POST
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.email) {
+    return NextResponse.json(
+      {
+        error: "Faça login para fazer uma cotação.",
+        loginRequired: true,
+      },
+      { status: 401 }
+    );
+  }
+
   try {
     const body = await request.json();
     const params: SearchParams = body;
@@ -231,5 +247,7 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
 
 

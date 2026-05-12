@@ -1,7 +1,24 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth.config";
 import { NextRequest, NextResponse } from "next/server";
 import { getPriceMonthMatrix } from "@/lib/travelpayouts";
-
 export async function POST(request: NextRequest) {
+  // LOGIN_REQUIRED_COTACAO_POST
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.email) {
+    return NextResponse.json(
+      {
+        error: "Faça login para fazer uma cotação.",
+        loginRequired: true,
+      },
+      { status: 401 }
+    );
+  }
+
   try {
     const body = await request.json();
     const { origin, destination, month } = body;
@@ -47,5 +64,7 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
 
 
