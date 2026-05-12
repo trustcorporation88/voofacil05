@@ -55,13 +55,15 @@ export function LandingNavbar({
       setShowUserMenu(false);
       setMobileOpen(false);
 
-      await signOut({
+      const result = await signOut({
+        redirect: false,
         callbackUrl: "/",
-        redirect: true,
       });
+
+      window.location.href = result?.url || "/";
     } catch (error) {
       console.error("Erro ao sair:", error);
-      setLoggingOut(false);
+      window.location.href = "/";
     }
   };
 
