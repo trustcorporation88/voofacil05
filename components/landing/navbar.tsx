@@ -47,6 +47,23 @@ export function LandingNavbar({
 }: NavbarProps) {
   const { data: session, status } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setLoggingOut(true);
+      setShowUserMenu(false);
+      setMobileOpen(false);
+
+      await signOut({
+        callbackUrl: "/",
+        redirect: true,
+      });
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+      setLoggingOut(false);
+    }
+  };
 
   return (
     <header className="fixed top-0 w-full z-50 glass-nav border-b border-brand-gray-300/30">
@@ -145,13 +162,17 @@ export function LandingNavbar({
                       <hr className="my-2 border-brand-gray-300/50" />
 
                       <button
-                        onClick={() => {
-                          signOut();
-                          setShowUserMenu(false);
-                        }}
-                        className="w-full text-left px-4 py-2.5 hover:bg-red-50 text-red-600 flex items-center gap-2 text-sm"
+                        type="button"
+                        onClick={handleLogout}
+                        disabled={loggingOut}
+                        className="w-full text-left px-4 py-2.5 hover:bg-red-50 text-red-600 flex items-center gap-2 text-sm disabled:opacity-60"
                       >
-                        <LogOut className="w-4 h-4" /> Sair
+                        {loggingOut ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <LogOut className="w-4 h-4" />
+                        )}
+                        {loggingOut ? "Saindo..." : "Sair"}
                       </button>
                     </div>
                   </>
@@ -203,6 +224,63 @@ export function LandingNavbar({
               </a>
             ))}
 
+            {session && status !== "loading" && (
+              <div className="grid grid-cols-1 gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    onNotifications();
+                  }}
+                  className="rounded-full border border-brand-charcoal/20 px-4 py-3 text-xs font-bold uppercase tracking-widest"
+                >
+                  Notificações
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    onFavorites();
+                  }}
+                  className="rounded-full border border-brand-charcoal/20 px-4 py-3 text-xs font-bold uppercase tracking-widest"
+                >
+                  Favoritos
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    onHistory();
+                  }}
+                  className="rounded-full border border-brand-charcoal/20 px-4 py-3 text-xs font-bold uppercase tracking-widest"
+                >
+                  Histórico
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    onAlerts();
+                  }}
+                  className="rounded-full border border-brand-charcoal/20 px-4 py-3 text-xs font-bold uppercase tracking-widest"
+                >
+                  Alertas
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="rounded-full bg-red-600 text-white px-4 py-3 text-xs font-bold uppercase tracking-widest disabled:opacity-60"
+                >
+                  {loggingOut ? "Saindo..." : "Sair"}
+                </button>
+              </div>
+            )}
+
             {!session && status !== "loading" && (
               <div className="grid grid-cols-2 gap-3 pt-3">
                 <button
@@ -234,8 +312,3 @@ export function LandingNavbar({
     </header>
   );
 }
-
-
-
-
-
