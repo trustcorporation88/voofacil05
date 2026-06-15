@@ -4,18 +4,34 @@ import { NextResponse } from "next/server";
 import webpush from "web-push";
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
+let resend: Resend | null = null;
 
-webpush.setVapidDetails(
-  "mailto:contato@vooscortex.com.br",
-  process.env.VAPID_PUBLIC_KEY || "",
-  process.env.VAPID_PRIVATE_KEY || ""
-);
+function getResendClient() {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+  return resend;
+}
+
+function configureWebPush() {
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+
+  if (!publicKey || !privateKey) {
+    return false;
+  }
+
+  webpush.setVapidDetails("mailto:contato@vooscortex.com.br", publicKey, privateKey);
+  return true;
+}
 
 async function sendAlertEmail(toEmail: string, origin: string, destination: string, price: number, targetPrice: number) {
   try {
-    await resend.emails.send({
+    const client = getResendClient();
+    if (!client) return;
+
+    await client.emails.send({
       from: process.env.RESEND_FROM || "onboarding@resend.dev",
       to: toEmail,
       subject: `✈️ Voos Cortex: Preço baixou! ${origin} → ${destination} por R$${Math.round(price)}`,
@@ -41,6 +57,7 @@ async function sendAlertEmail(toEmail: string, origin: string, destination: stri
 
 export async function GET() {
   try {
+    const webPushConfigured = configureWebPush();
     const activeAlerts = await prisma.priceAlert.findMany({
       where: {
         isActive: true,
@@ -106,7 +123,7 @@ export async function GET() {
                 where: { userId: alert.userId },
               });
 
-              if (pushSub?.endpoint) {
+              if (webPushConfigured && pushSub?.endpoint) {
                 try {
                   await webpush.sendNotification(
                     {
@@ -171,5 +188,4 @@ export async function GET() {
     return NextResponse.json({ error: "Erro ao verificar alertas" }, { status: 500 });
   }
 }
-
 
