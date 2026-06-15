@@ -3,9 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth.config";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
@@ -94,5 +92,4 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Erro ao remover favorito" }, { status: 500 });
   }
 }
-
 

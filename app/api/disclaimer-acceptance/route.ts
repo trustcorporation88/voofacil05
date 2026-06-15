@@ -3,13 +3,11 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth.config";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import {
   DISCLAIMER_TEXT,
   DISCLAIMER_VERSION,
 } from "@/lib/disclaimer";
-
-const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   try {

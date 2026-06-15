@@ -1,11 +1,9 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import webpush from "web-push";
 import { Resend } from "resend";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 webpush.setVapidDetails(
   "mailto:contato@vooscortex.com.br",
@@ -173,6 +171,5 @@ export async function GET() {
     return NextResponse.json({ error: "Erro ao verificar alertas" }, { status: 500 });
   }
 }
-
 
 
