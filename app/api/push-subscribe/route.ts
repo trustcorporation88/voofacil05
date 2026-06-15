@@ -4,15 +4,17 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth.config";
 import { prisma } from "@/lib/prisma";
+import { resolveAuthenticatedUser } from "@/lib/session-user";
 
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const user = await resolveAuthenticatedUser(session);
+    if (!user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = user.id;
     const { subscription } = await request.json();
 
     if (!subscription?.endpoint) {
@@ -58,4 +60,3 @@ export async function DELETE() {
     return NextResponse.json({ error: "Erro" }, { status: 500 });
   }
 }
-

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth.config";
 import { prisma } from "@/lib/prisma";
+import { resolveAuthenticatedUser } from "@/lib/session-user";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
     }
 
     const authSession = await getServerSession(authOptions);
-    const userId = (authSession?.user as any)?.id || null;
+    const userId = (await resolveAuthenticatedUser(authSession))?.id || null;
     const now = new Date();
 
     let session = await prisma.visitSession.findUnique({

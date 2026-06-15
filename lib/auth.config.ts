@@ -61,10 +61,18 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         (token as any).id = (user as any).id;
+        token.email = (user as any).email || token.email;
         (token as any).isAdmin = isAdminEmail(
           ((user as any).email || token.email || "") as string
         );
       } else if (token?.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email },
+          select: { id: true },
+        });
+        if (dbUser) {
+          (token as any).id = dbUser.id;
+        }
         (token as any).isAdmin = isAdminEmail(token.email);
       }
 

@@ -4,15 +4,17 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth.config";
 import { prisma } from "@/lib/prisma";
+import { resolveAuthenticatedUser } from "@/lib/session-user";
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const user = await resolveAuthenticatedUser(session);
+    if (!user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = user.id;
     const notifications = await prisma.notification.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
@@ -33,11 +35,12 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const user = await resolveAuthenticatedUser(session);
+    if (!user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = user.id;
     const { id, readAll } = await request.json();
 
     if (readAll) {
@@ -58,4 +61,3 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Erro" }, { status: 500 });
   }
 }
-

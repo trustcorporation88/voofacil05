@@ -4,16 +4,17 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth.config";
 import { prisma } from "@/lib/prisma";
+import { resolveAuthenticatedUser } from "@/lib/session-user";
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
+    const user = await resolveAuthenticatedUser(session);
+    if (!user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = user.id;
     const history = await prisma.searchHistory.findMany({
       where: { userId },
       orderBy: { timestamp: "desc" },
@@ -30,12 +31,12 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
+    const user = await resolveAuthenticatedUser(session);
+    if (!user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = user.id;
     const { origin, destination, departureDate, returnDate, passengers } = await request.json();
 
     if (!origin || !destination || !departureDate) {
@@ -59,4 +60,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Erro ao salvar histórico" }, { status: 500 });
   }
 }
-

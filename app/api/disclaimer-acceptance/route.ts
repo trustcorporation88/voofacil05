@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth.config";
 import { prisma } from "@/lib/prisma";
+import { resolveAuthenticatedUser } from "@/lib/session-user";
 import {
   DISCLAIMER_TEXT,
   DISCLAIMER_VERSION,
@@ -12,14 +13,9 @@ import {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
+    const user = await resolveAuthenticatedUser(session);
+    if (!user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-    }
-
-    const userId = (session.user as any).id;
-    if (!userId) {
-      return NextResponse.json({ error: "Sessão sem userId" }, { status: 400 });
     }
 
     const forwarded = request.headers.get("x-forwarded-for");
@@ -29,7 +25,7 @@ export async function POST(request: Request) {
     const acceptance = await prisma.disclaimerAcceptance.upsert({
       where: {
         userId_version: {
-          userId,
+          userId: user.id,
           version: DISCLAIMER_VERSION,
         },
       },
@@ -40,7 +36,7 @@ export async function POST(request: Request) {
         disclaimerText: DISCLAIMER_TEXT,
       },
       create: {
-        userId,
+        userId: user.id,
         version: DISCLAIMER_VERSION,
         disclaimerText: DISCLAIMER_TEXT,
         ip,
@@ -67,20 +63,15 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
+    const user = await resolveAuthenticatedUser(session);
+    if (!user) {
       return NextResponse.json({ accepted: false, authenticated: false });
-    }
-
-    const userId = (session.user as any).id;
-    if (!userId) {
-      return NextResponse.json({ accepted: false, authenticated: true, error: "Sessão sem userId" });
     }
 
     const acceptance = await prisma.disclaimerAcceptance.findUnique({
       where: {
         userId_version: {
-          userId,
+          userId: user.id,
           version: DISCLAIMER_VERSION,
         },
       },
